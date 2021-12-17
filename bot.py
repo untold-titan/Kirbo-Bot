@@ -43,6 +43,11 @@ async def about(ctx):
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
 
+@bot.command(name="shutdown")
+@commands.has_role("admin")
+async def shutdown(ctx):
+    quit()
+
 
 #Events ---------------------------------------------------------------------
 @bot.event
