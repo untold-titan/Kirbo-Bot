@@ -22,19 +22,30 @@ bot = commands.Bot(command_prefix=',',intents=intents)
 async def on_ready():
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name='Army Gang!'))
     print(f'{bot.user.name} has connected to Discord!')
+#Help Command --------------------------------------------------------------
+bot.remove_command('help')
+@bot.command(name="help")
+async def help(ctx):
+    embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','",color=PINK)
+    embed.add_field(name="about",value="Shows information about the bot and it's creator",inline=False)
+    embed.add_field(name="store",value="Shows the Army Gang Token Store",inline=False)
+    embed.add_field(name="poyo", value="The signature Kirbo noise!",inline=False)
+    embed.add_field(name="daily", value="NOT IMPLEMENTED YET",inline=False)
+    embed.add_field(name="roll",value="Rolls a die. \n Usage:\n`,roll <number of dice> <sides of die>`",inline=False)
+    await ctx.send(embed=embed)
 
 #Commands ------------------------------------------------------------------
-@bot.command(name='poyo', help='Signature Korby noise')
+@bot.command(name='poyo')
 @commands.has_role('admin')
 async def poyo(ctx):
     await ctx.send('Poyo!')
 
-@bot.command(name='store', help='Opens the Army Gang store')
+@bot.command(name='store')
 @commands.has_role('admin')
 async def store(ctx):
     await ctx.send('Army Gang Store\nCustom Role = 15000 tokens')
 
-@bot.command(name='about', help='Infomation about the bot, and its developer')
+@bot.command(name='about')
 @commands.has_role('admin')
 async def about(ctx):
     myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Cataclysm-Interactive for the Army Gang", color=PINK)
@@ -46,6 +57,7 @@ async def about(ctx):
 @bot.command(name="shutdown")
 @commands.has_role("admin")
 async def shutdown(ctx):
+    ctx.send("Shutting down Korby bot!")
     quit()
 
 
