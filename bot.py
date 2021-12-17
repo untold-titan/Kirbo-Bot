@@ -1,4 +1,5 @@
 # bot.py
+VERSION = 'V0.0.1 DEV'
 import os
 
 import discord
@@ -10,16 +11,20 @@ from discord import Color
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
-VERSION = 'V0.0.1 DEV'
-bot = commands.Bot(command_prefix=',')
 PINK = Color.from_rgb(255,185,209)
+
+
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix=',',intents=intents)
 
 @bot.event
 async def on_ready():
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name='Army Gang!'))
     print(f'{bot.user.name} has connected to Discord!')
 
 #Commands ------------------------------------------------------------------
-@bot.command(name='poyo', help='Signature Korbo noise')
+@bot.command(name='poyo', help='Signature Korby noise')
 @commands.has_role('admin')
 async def poyo(ctx):
     await ctx.send('Poyo!')
@@ -37,16 +42,16 @@ async def about(ctx):
     myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer")
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
+
+
 #Events ---------------------------------------------------------------------
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('Since this bot is still in development, it is restriced to admins only! Sorry!')
 
-@client.event
+@bot.event
 async def on_member_join(member):
-    await member.create_dm()
-    await member.dm_channel.send(
-        f'Welcome to the Army Gang, {member.name}. Please take a look at #rules-roles to get access to the rest of the server! If you need anything, feel free to ping Titan or Coolr.'
-    )
+    await member.send(f'Welcome to the Army Gang, {member.name}. Please take a look at #rules-roles to get access to the rest of the server! If you need anything, feel free to ping Titan or Coolr.')
+
 bot.run(TOKEN)
