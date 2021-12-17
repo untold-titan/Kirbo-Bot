@@ -57,7 +57,7 @@ async def about(ctx):
 @bot.command(name="shutdown")
 @commands.has_role("admin")
 async def shutdown(ctx):
-    ctx.send("Shutting down Korby bot!")
+    ctx.send("Shutting down Kirbo bot!")
     quit()
 
 
