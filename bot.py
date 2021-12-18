@@ -3,6 +3,7 @@ VERSION = 'V0.0.1 DEV'
 import os
 
 import discord
+import random
 from discord import client
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -54,6 +55,15 @@ async def about(ctx):
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
 
+@bot.command(name="roll")
+@commands.has_role("admin")
+async def roll(ctx,number_of_dice: int,number_of_sides:int): 
+    dice = [
+        str(random.choice(range(1, number_of_sides + 1)))
+        for _ in range(number_of_dice)
+    ]
+    await ctx.send(', '.join(dice))
+
 @bot.command(name="shutdown")
 @commands.has_role("admin")
 async def shutdown(ctx):
@@ -66,6 +76,8 @@ async def shutdown(ctx):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('Since this bot is still in development, it is restriced to admins only! Sorry!')
+    await ctx.send(f"`{error}`")
+        
 
 @bot.event
 async def on_member_join(member):
