@@ -1,5 +1,5 @@
 # bot.py
-VERSION = 'V0.0.1 DEV'
+VERSION = 'V0.0.1 STABLE'
 import json
 import os
 import ast
