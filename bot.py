@@ -1,5 +1,5 @@
 # bot.py
-VERSION = 'V0.0.1 STABLE'
+VERSION = 'V0.0.2 STABLE'
 import json
 import os
 import ast
@@ -183,6 +183,33 @@ async def buy(ctx,item: int):
                 return
             await ctx.send("You don't have enough tokens!")
 
+@bot.command(name="give")
+async def give(ctx,member: MemberConverter, amount: int):
+    giver = getUserData(ctx.author.id)
+    taker = getUserData(member.id)
+
+    if giver != None and taker != None and giver["token"] >= amount:
+        total = int(giver["token"]) - amount
+        jsonGive = {"id":giver["id"],"token":total}
+        response = requests.put(USER_URL+"/"+str(member.id),json=jsonGive)
+        if response.status_code == 204:
+            total = int(taker["token"]) + amount
+            json = {"id":taker["id"],"token":total}
+            response = requests.put(USER_URL+"/"+str(ctx.author.id),json=json)
+            if response.status_code == 204:
+                await ctx.send(f"Gave {amount} to {member}")
+            else:
+                await ctx.send("Something went wrong")
+        else:
+            await ctx.send("Somehting went wrong")
+    elif taker == None:
+        await ctx.send(member +"has to earn some tokens before they can recive!")
+    elif giver == None:
+        await ctx.send(ctx.author +"has to earn some tokens before they can send!")
+    elif giver["token"] < amount:
+        await ctx.send("You don't have enough tokens!")
+    else:
+        await ctx.send("Something went wrong. Try again later!")  
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
 @commands.has_role("admin")
