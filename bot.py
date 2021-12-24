@@ -1,21 +1,23 @@
 # bot.py
-VERSION = 'V0.0.1 DEV'
+VERSION = 'V0.1.0 FACTIONS PT.1'
 import json
 import os
 import ast
+from warnings import resetwarnings
 from discord import colour, embeds, member
 from discord.ext.commands.converter import MemberConverter
 import requests
 import discord
 import random
-from discord import client
+import asyncio
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord import Color
-from requests.models import Response
-from datetime import datetime
+from datetime import datetime, timedelta
 from datetime import date
 from discord.utils import get
+from requests import api
+from requests.models import Response
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -23,7 +25,9 @@ GUILD = os.getenv('DISCORD_GUILD')
 PINK = Color.from_rgb(255,185,209)
 
 
-API_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users"
+USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users"
+FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions"
+
 intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.listening, name='Army Gang!'))
@@ -38,7 +42,7 @@ async def on_ready():
 
 # Helper Functions -----------------------------------------------------------------
 def getUserData(id):
-    url = API_URL + "/" + str(id)
+    url = USER_URL + "/" + str(id)
     response = requests.get(url)
     if response.status_code != 200:
         return None
@@ -46,6 +50,26 @@ def getUserData(id):
         jsonResponse = ast.literal_eval(str(response.json()))
         return jsonResponse
 
+def getAllFactions():
+    response = requests.get(FACTION_URL)
+    if response.status_code != 200:
+        return None
+    else:
+        jsonResponse = ast.literal_eval(str(response.json()))
+        return jsonResponse
+
+def getUserFaction(id):
+    response = getAllFactions()
+    for x in response:
+        factionData = ast.literal_eval(str(x))
+        if ',' in factionData["factionMembers"]:
+            members = str(factionData["factionMembers"]).split(",")
+            for y in members:
+                if y == str(id):
+                    return factionData
+        else:
+            if factionData["factionMembers"] == str(id):
+                return factionData
 
 
 #Help Command --------------------------------------------------------------
@@ -119,14 +143,15 @@ async def store(ctx):
 
 @bot.command(name="daily")
 async def daily(ctx):
+    await ctx.send("Hold on a sec, this might take some time!")
     currentdate = date.today()
     userId = ctx.author.id
-    url = API_URL + "/" + str(userId)
+    url = USER_URL + "/" + str(userId)
     response = requests.get(url)
     jsonResponse = ast.literal_eval(str(response.json()))
     if response.status_code == 404:
         jsonData = {"Id": f"{userId}", "token": 500, "date": f"{currentdate}"}
-        response = requests.post(API_URL,json=jsonData)
+        response = requests.post(USER_URL,json=jsonData)
         if response.status_code == 201:
             embed = discord.Embed(title="Daily Token Reward", description="You gained 500 AG Tokens!",color=PINK)
             await ctx.send(embed=embed)
@@ -156,7 +181,7 @@ async def bal(ctx):
     jsonResponse = getUserData(ctx.author.id)
     if jsonResponse == None:
         json = {"Id":f"{ctx.author.id}"}
-        response= requests.post(API_URL,json)
+        response= requests.post(USER_URL,json)
         tokenAmt = 0
     else:
         tokenAmt = jsonResponse["token"]
@@ -165,7 +190,7 @@ async def bal(ctx):
 
 @bot.command(name="buy")
 async def buy(ctx,item: int):
-    url = API_URL + "/" + str(ctx.author.id)
+    url = USER_URL + "/" + str(ctx.author.id)
     data = getUserData(ctx.author.id)
     if item == 1:
         if (int(data["token"]) - 15000) >= 0 and data["customRole"] != 1:
@@ -182,6 +207,171 @@ async def buy(ctx,item: int):
                 await ctx.send("You already have a custom role!")
                 return
             await ctx.send("You don't have enough tokens!")
+
+@bot.command(name="give")
+async def give(ctx,member: MemberConverter, amount: int):
+    giver = getUserData(ctx.author.id)
+    taker = getUserData(member.id)
+
+    if giver != None and taker != None and giver["token"] >= amount:
+        total = int(giver["token"]) - amount
+        jsonGive = {"id":giver["id"],"token":total}
+        response = requests.put(USER_URL+"/"+str(member.id),json=jsonGive)
+        if response.status_code == 204:
+            total = int(taker["token"]) + amount
+            json = {"id":taker["id"],"token":total}
+            response = requests.put(USER_URL+"/"+str(ctx.author.id),json=json)
+            if response.status_code == 204:
+                await ctx.send(f"Gave {amount} to {member}")
+            else:
+                await ctx.send("Something went wrong")
+        else:
+            await ctx.send("Somehting went wrong")
+    elif taker == None:
+        await ctx.send(member +"has to earn some tokens before they can recive!")
+    elif giver == None:
+        await ctx.send(ctx.author +"has to earn some tokens before they can send!")
+    elif giver["token"] < amount:
+        await ctx.send("You don't have enough tokens!")
+    else:
+        await ctx.send("Something went wrong. Try again later!")
+
+#  Faction Commands ----------------------------------------------------------------
+
+factionTasks= [
+    "Cleaning the floors...",
+    "Catching Pokemon...",
+    "Secretly Building a Nuclear Weapon...",
+    "Cooking Tacos...",
+    "Serving up some fresh Pizza...",
+    "Selling 17 metric tons of weed...",
+    "Slowly decending into madness...",
+    "Plotting a coupé...",
+    "Hiding bodies...",
+    "Nothing...",
+    "Sleeping..."
+]
+
+@bot.command(name="faction")
+async def faction(ctx):  
+    faction = getUserFaction(ctx.author.id)
+    if faction == None:
+        await ctx.send("You aren't in a faction! Make one with `,createfaction <Plot-Number> <Faction-Name>`")
+        return
+    else:    
+        factionName = str(faction["factionName"])
+        factionOwner = bot.get_user(faction["id"])
+        embed = discord.Embed(title=f"{factionName}",description=f"Faction Owner: {factionOwner}",colour=PINK)
+        members = ""
+        if "," in faction["factionMembers"]:
+            membersList = str(faction["factionMembers"]).split(",")
+            for x in membersList:
+                member = bot.get_user(int(x))
+                members += str(member) + "\n"
+        else:
+            members = bot.get_user(int(faction["factionMembers"]))
+
+        embed.add_field(name="Faction Members:",value=f"{members}",inline=False)
+        status = random.choice(range(0,len(factionTasks)))
+        embed.add_field(name="Faction Status:",value=f"{factionTasks[status]}",inline=False)
+        income = faction["factionIncome"]
+        embed.add_field(name="Faction Income:",value=f"{income} Tokens")
+        embed.add_field(name="Faction Location:",value=f"{faction['factionLandClaim']}")
+
+        await ctx.send(embed=embed)
+
+@bot.command(name="createfaction")
+async def createfaction(ctx,plot:int,*name:str):
+    await ctx.send("Please hold for a bit. This may take a while.")
+    faction = getUserFaction(ctx.author.id)
+
+    factionName = ""
+    for x in name:
+        factionName = factionName +" "+ x
+    if faction == None:
+        json = {"id":f"{ctx.author.id}","factionName":f"{factionName}","factionIncome":10,"factionMembers":f"{ctx.author.id}","factionLandClaim":str(plot)}
+        response = requests.post(FACTION_URL,json=json)
+        if response.status_code == 201:
+            await ctx.send("Your faction has been created! Use `,faction` to view it!")
+        else:
+            await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
+    else:
+        await ctx.send("You already own a store! Use `,store` to view it!")
+
+@bot.command(name="invite")
+async def invite(ctx,member:MemberConverter):
+    faction = getUserFaction(ctx.author.id)
+    if member != None and faction != None:
+        invited = getUserFaction(member.id)
+        if invited == None:
+            await ctx.send(f"{member} type `y` to accept the invitiation!")
+            def check(m: discord.Message):
+                return m.author.id == member.id and m.channel.id == ctx.channel.id and m.content =="y"
+            try:
+                msg = await bot.wait_for(event = 'message', check = check, timeout = 60.0)
+            except asyncio.TimeoutError:
+                await ctx.send(f"Automatically declined invite.")
+                return
+            else:
+                json = {"id":f"{faction['id']}","factionName":f"{faction['factionName']}","factionIncome":f"{faction['factionIncome']}","factionMembers":f"{faction['factionMembers'] + ',' + str(member.id)}","factionLandClaim":f"{faction['factionLandClaim']}"}          
+                reponse = requests.put(FACTION_URL + "/" + str(faction["id"]),json=json)
+                if reponse.status_code == 204:
+                    await ctx.send(f"{member} You accepted the invite. Welcome to {faction['factionName']}!")
+                else:
+                    await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {reponse.status_code}")
+                return
+        else:
+            await ctx.send(f"{member} needs to leave their faction in order to be invited to this one!")
+    else:
+        await ctx.send("You need to include a member to invite")
+
+@bot.command(name="leavefaction")
+async def leavefaction(ctx):
+    faction = getUserFaction(ctx.author.id)
+    if faction == None:
+        await ctx.send("You aren't in a faction!")
+        return
+    members = str(faction["factionMembers"]).split(',')
+    members.remove(str(ctx.author.id))
+    string = ""
+    for x in members:
+        string += x + ","
+    json = {"id":f"{faction['id']}","factionName":f"{faction['factionName']}","factionIncome":f"{faction['factionIncome']}","factionMembers":f"{string[:-1]}","factionLandClaim":f"{faction['factionLandClaim']}"}
+    await ctx.send(json)
+    response = requests.put(FACTION_URL + "/" + str(faction["id"]),json=json)
+    if response.status_code == 204:
+        await ctx.send("You left your faction!")
+    else:
+        await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
+
+@bot.command(name="map")
+async def map(ctx):
+    factions = getAllFactions()
+    locations = []
+    for x in factions:
+        data = ast.literal_eval(str(x))
+        locations.append(data["factionLandClaim"])
+    count=0
+    korby = get(ctx.guild.emojis, name="green_square")
+    guy = get(ctx.guild.emojis, name="guy")
+    string = ""
+    occupied = False
+    for x in range(10):
+        for y in range(10):
+            occupied = False
+            count += 1
+            print(count)
+            for z in locations:
+                if str(count) == z:
+                    occupied = True
+            if occupied == True:
+                string += f"{guy}"
+            else:    
+                string += f"{korby}"
+
+        string += "\n"
+    embed = discord.Embed(title="Faction Map", description=string,colour=PINK)
+    await ctx.send(embed=embed)
 
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
@@ -203,14 +393,19 @@ async def unmute(ctx,member:MemberConverter):
 @bot.command(name="testapi")
 @commands.has_role("admin")
 async def testapi(ctx):
-    response = requests.get(API_URL)
-    await ctx.send(response.json())
+    responseuser = requests.get(USER_URL)
+    responsestore = requests.get(FACTION_URL)
+    await ctx.send(responseuser.json())
+    await ctx.send(responsestore.json())
 
 @bot.command(name="shutdown")
 @commands.has_role("admin")
 async def shutdown(ctx):
-    await ctx.send("Shutting down Kirbo bot!")
-    quit()
+    if ctx.author != bot.titan:
+        await ctx.send("You aren't Titan!")
+    else:
+        await ctx.send("Shutting down Kirbo bot!")
+        quit()
 
 @bot.command(name="testmsgs")
 @commands.has_role("admin")
@@ -218,6 +413,9 @@ async def testmsgs(ctx):
     await bot.titan.send("Test")
     await bot.adminChat.send("Test")
 
+@bot.command(name="file")
+async def file(ctx):
+    await ctx.send(ctx.message.attachments)
 
 #Events ---------------------------------------------------------------------
 
@@ -225,7 +423,8 @@ async def testmsgs(ctx):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('Thats an admin only command!')
-    await ctx.send(error)
+    await ctx.send("Something went wrong!")
+    await ctx.send(f"{error}")
     #await bot.titan.send(f"{error}")
 
 @bot.event 
@@ -234,6 +433,7 @@ async def on_member_remove(member):
 
 @bot.event
 async def on_member_join(member):
+    await bot.adminChat.send(f"{member} Joined")
     await member.send(f'Welcome to the Army Gang, {member.name}. Please take a look at #rules-roles to get access to the rest of the server! If you need anything, feel free to ping Titan or Coolr.')
 
 
