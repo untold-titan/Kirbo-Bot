@@ -1,5 +1,5 @@
 # bot.py
-VERSION = 'V0.0.2 STABLE'
+VERSION = 'V0.0.3 STABLE'
 import json
 import os
 import ast
@@ -23,7 +23,7 @@ GUILD = os.getenv('DISCORD_GUILD')
 PINK = Color.from_rgb(255,185,209)
 
 
-API_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users"
+USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users"
 intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.listening, name='Army Gang!'))
@@ -38,7 +38,7 @@ async def on_ready():
 
 # Helper Functions -----------------------------------------------------------------
 def getUserData(id):
-    url = API_URL + "/" + str(id)
+    url = USER_URL + "/" + str(id)
     response = requests.get(url)
     if response.status_code != 200:
         return None
@@ -54,7 +54,7 @@ bot.remove_command('help')
 async def help(ctx, comnd: str=None):
     embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','",color=PINK)
     embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot",inline=False)
-    embed.add_field(name="Economy Commands",value="bal, daily, store, buy",inline=False)
+    embed.add_field(name="Economy Commands",value="bal, daily, store, buy, give",inline=False)
     embed.add_field(name="Debugging Commands",value="testapi, shutdown",inline=False)
     await ctx.send(embed=embed)
 
@@ -88,6 +88,7 @@ async def roll(ctx,number_of_dice: int,number_of_sides:int):
 async def about(ctx):
     myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Cataclysm-Interactive for the Army Gang", color=PINK)
     myEmbed.set_author(name="christmas titan#1704", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
+    myEmbed.add_field(name="Changes:", value="Added support for Hours, Minutes and Seconds, Added `give` command, updated `help` command")
     myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer")
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
@@ -119,44 +120,43 @@ async def store(ctx):
 
 @bot.command(name="daily")
 async def daily(ctx):
-    currentdate = date.today()
+    await ctx.send("Hold on a sec, this might take some time!")
+    currentdate = datetime.now()
     userId = ctx.author.id
-    url = API_URL + "/" + str(userId)
+    url = USER_URL + "/" + str(userId)
     response = requests.get(url)
     jsonResponse = ast.literal_eval(str(response.json()))
     if response.status_code == 404:
         jsonData = {"Id": f"{userId}", "token": 500, "date": f"{currentdate}"}
-        response = requests.post(API_URL,json=jsonData)
+        response = requests.post(USER_URL,json=jsonData)
         if response.status_code == 201:
             embed = discord.Embed(title="Daily Token Reward", description="You gained 500 AG Tokens!",color=PINK)
             await ctx.send(embed=embed)
         else:
-            await ctx.send("There was an issue contacting the CataclysmAPI (ERROR CODE = 1)")
-            await bot.titan.send(f"Couldn't contact the API, Status code returned with: {response.status_code}")
+            await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
     elif response.status_code == 200:
         actualDate = datetime.strptime(jsonResponse["date"], '%Y-%m-%dT%H:%M:%S')
-        if (currentdate - actualDate.date()).days >= 1:
+        if (currentdate - actualDate).days >= 1:
             total = int(jsonResponse["token"]) + 500
-            jsonData = {"Id": f"{userId}","token": f"{total}", "date": f"{currentdate}"}
+            jsonData = {"Id": f"{userId}","token": total, "date": f"{currentdate.date()}T{currentdate.time().replace(microsecond=0)}"}
+            print(jsonData)
             response = requests.put(url,json=jsonData)
             if response.status_code == 204:
                 embed = discord.Embed(title="Daily Token Reward", description="You gained 500 AG Tokens!",color=PINK)
                 await ctx.send(embed=embed)
             else:
-                await ctx.send("There was an issue contacting the CataclysmAPI (ERROR CODE = 2)")
-                await bot.titan.send(f"Couldn't contact the API, Status code returned with: {response.status_code}")
+                await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
         else:
             await ctx.send("You already claimed today's reward! Please try again tommorow")
     else:
-        await ctx.send("There was an issue contacting the CataclysmAPI ERROR CODE = 3")
-        await bot.titan.send(f"I was unable to contact the CataclysmAPI. \n Status code is: {response.status_code}.")
+        await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
 
 @bot.command(name="bal")
 async def bal(ctx):
     jsonResponse = getUserData(ctx.author.id)
     if jsonResponse == None:
         json = {"Id":f"{ctx.author.id}"}
-        response= requests.post(API_URL,json)
+        response= requests.post(USER_URL,json)
         tokenAmt = 0
     else:
         tokenAmt = jsonResponse["token"]
@@ -165,7 +165,7 @@ async def bal(ctx):
 
 @bot.command(name="buy")
 async def buy(ctx,item: int):
-    url = API_URL + "/" + str(ctx.author.id)
+    url = USER_URL + "/" + str(ctx.author.id)
     data = getUserData(ctx.author.id)
     if item == 1:
         if (int(data["token"]) - 15000) >= 0 and data["customRole"] != 1:
@@ -230,7 +230,7 @@ async def unmute(ctx,member:MemberConverter):
 @bot.command(name="testapi")
 @commands.has_role("admin")
 async def testapi(ctx):
-    response = requests.get(API_URL)
+    response = requests.get(USER_URL)
     await ctx.send(response.json())
 
 @bot.command(name="shutdown")
