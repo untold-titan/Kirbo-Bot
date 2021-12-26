@@ -78,8 +78,8 @@ bot.remove_command('help')
 async def help(ctx, comnd: str=None):
     embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','",color=PINK)
     embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot",inline=False)
-    embed.add_field(name="Economy Commands",value="bal, daily, store, buy",inline=False)
-    embed.add_field(name="Debugging Commands",value="testapi, shutdown",inline=False)
+    embed.add_field(name="Economy Commands",value="bal, daily, store, buy, give",inline=False)
+    embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite",inline=False)
     await ctx.send(embed=embed)
 
 # Fun Commands ------------------------------------------------------------------
@@ -144,7 +144,7 @@ async def store(ctx):
 @bot.command(name="daily")
 async def daily(ctx):
     await ctx.send("Hold on a sec, this might take some time!")
-    currentdate = date.today()
+    currentdate = datetime.now()
     userId = ctx.author.id
     url = USER_URL + "/" + str(userId)
     response = requests.get(url)
@@ -156,25 +156,23 @@ async def daily(ctx):
             embed = discord.Embed(title="Daily Token Reward", description="You gained 500 AG Tokens!",color=PINK)
             await ctx.send(embed=embed)
         else:
-            await ctx.send("There was an issue contacting the CataclysmAPI (ERROR CODE = 1)")
-            await bot.titan.send(f"Couldn't contact the API, Status code returned with: {response.status_code}")
+            await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
     elif response.status_code == 200:
         actualDate = datetime.strptime(jsonResponse["date"], '%Y-%m-%dT%H:%M:%S')
-        if (currentdate - actualDate.date()).days >= 1:
+        if (currentdate - actualDate).days >= 1:
             total = int(jsonResponse["token"]) + 500
-            jsonData = {"Id": f"{userId}","token": f"{total}", "date": f"{currentdate}"}
+            jsonData = {"Id": f"{userId}","token": total, "date": f"{currentdate.date()}T{currentdate.time().replace(microsecond=0)}"}
+            print(jsonData)
             response = requests.put(url,json=jsonData)
             if response.status_code == 204:
                 embed = discord.Embed(title="Daily Token Reward", description="You gained 500 AG Tokens!",color=PINK)
                 await ctx.send(embed=embed)
             else:
-                await ctx.send("There was an issue contacting the CataclysmAPI (ERROR CODE = 2)")
-                await bot.titan.send(f"Couldn't contact the API, Status code returned with: {response.status_code}")
+                await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
         else:
             await ctx.send("You already claimed today's reward! Please try again tommorow")
     else:
-        await ctx.send("There was an issue contacting the CataclysmAPI ERROR CODE = 3")
-        await bot.titan.send(f"I was unable to contact the CataclysmAPI. \n Status code is: {response.status_code}.")
+        await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
 
 @bot.command(name="bal")
 async def bal(ctx):
@@ -256,12 +254,13 @@ factionTasks= [
 async def faction(ctx):  
     faction = getUserFaction(ctx.author.id)
     if faction == None:
-        await ctx.send("You aren't in a faction! Make one with `,createfaction <Plot-Number> <Faction-Name>`")
+        await ctx.send("You aren't in a faction! Make one with `,createfaction <Plot-Number> <Faction-Name>` Be sure to attach a Faction Logo Image too!")
         return
-    else:    
+    else:
+        factionEmoji = get(ctx.guild.emojis,name=faction["factionLogo"])
         factionName = str(faction["factionName"])
         factionOwner = bot.get_user(faction["id"])
-        embed = discord.Embed(title=f"{factionName}",description=f"Faction Owner: {factionOwner}",colour=PINK)
+        embed = discord.Embed(title=f"{factionName} {factionEmoji}",description=f"Faction Owner: {factionOwner}",colour=PINK)
         members = ""
         if "," in faction["factionMembers"]:
             membersList = str(faction["factionMembers"]).split(",")
@@ -276,7 +275,7 @@ async def faction(ctx):
         embed.add_field(name="Faction Status:",value=f"{factionTasks[status]}",inline=False)
         income = faction["factionIncome"]
         embed.add_field(name="Faction Income:",value=f"{income} Tokens")
-        embed.add_field(name="Faction Location:",value=f"{faction['factionLandClaim']}")
+        embed.add_field(name="Faction Plots:",value=f"{faction['factionLandClaim']}")
 
         await ctx.send(embed=embed)
 
@@ -289,14 +288,33 @@ async def createfaction(ctx,plot:int,*name:str):
     for x in name:
         factionName = factionName +" "+ x
     if faction == None:
-        json = {"id":f"{ctx.author.id}","factionName":f"{factionName}","factionIncome":10,"factionMembers":f"{ctx.author.id}","factionLandClaim":str(plot)}
-        response = requests.post(FACTION_URL,json=json)
+        otherFactions = getAllFactions()
+        if otherFactions != None:
+            for x in otherFactions:
+                faction = ast.literal_eval(str(x))
+                plots = faction["factionLandClaim"].split(",")
+                for y in plots:
+                    if int(y) == plot:
+                        await ctx.send("This location is already owned! Please pick a different location.")
+                        return
+        if len(ctx.message.attachments) == 0:
+            await ctx.send("You need to upload a photo to create a faction!")
+            return
+        else:
+            img_data = requests.get(ctx.message.attachments[0].url).content
+            emojiName = factionName.replace(" ","")
+            emojiName = emojiName.replace("'","")
+            emojiName = emojiName.replace(",","")
+            await ctx.guild.create_custom_emoji(name=str(emojiName),image=img_data)
+        json = {"id":f"{ctx.author.id}","factionName":f"{factionName}","factionIncome":10,"factionMembers":f"{ctx.author.id}","factionLandClaim":str(plot),"factionLogo":f"{emojiName}"}
+        response = requests.post(FACTION_URL,json=json)   
+        
         if response.status_code == 201:
             await ctx.send("Your faction has been created! Use `,faction` to view it!")
         else:
             await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
     else:
-        await ctx.send("You already own a store! Use `,store` to view it!")
+        await ctx.send("You're already in a Faction! Use `,faction` to view it!")
 
 @bot.command(name="invite")
 async def invite(ctx,member:MemberConverter):
@@ -336,9 +354,15 @@ async def leavefaction(ctx):
     string = ""
     for x in members:
         string += x + ","
-    json = {"id":f"{faction['id']}","factionName":f"{faction['factionName']}","factionIncome":f"{faction['factionIncome']}","factionMembers":f"{string[:-1]}","factionLandClaim":f"{faction['factionLandClaim']}"}
-    await ctx.send(json)
-    response = requests.put(FACTION_URL + "/" + str(faction["id"]),json=json)
+    if string == "":
+        response = requests.delete(FACTION_URL + "/" + str(faction["id"]))
+        emojis = ctx.guild.emojis
+        for emoji in emojis:
+            if emoji.name == faction["factionLogo"]:
+                await emoji.delete()
+    else:
+        json = {"id":f"{faction['id']}","factionName":f"{faction['factionName']}","factionIncome":f"{faction['factionIncome']}","factionMembers":f"{string[:-1]}","factionLandClaim":f"{faction['factionLandClaim']}"}
+        response = requests.put(FACTION_URL + "/" + str(faction["id"]),json=json)
     if response.status_code == 204:
         await ctx.send("You left your faction!")
     else:
@@ -346,32 +370,31 @@ async def leavefaction(ctx):
 
 @bot.command(name="map")
 async def map(ctx):
-    factions = getAllFactions()
-    locations = []
-    for x in factions:
-        data = ast.literal_eval(str(x))
-        locations.append(data["factionLandClaim"])
-    count=0
-    korby = get(ctx.guild.emojis, name="green_square")
-    guy = get(ctx.guild.emojis, name="guy")
-    string = ""
-    occupied = False
-    for x in range(10):
-        for y in range(10):
-            occupied = False
-            count += 1
-            print(count)
-            for z in locations:
-                if str(count) == z:
-                    occupied = True
-            if occupied == True:
-                string += f"{guy}"
-            else:    
-                string += f"{korby}"
+    # Creating the base land map.
+    map = []
+    landEmoji = get(ctx.guild.emojis, name="unclaimed")
+    for x in range(100):
+        map.append(f"{landEmoji}")
 
-        string += "\n"
-    embed = discord.Embed(title="Faction Map", description=string,colour=PINK)
+    #Adding the factions
+    factions = getAllFactions()
+    for x in factions:
+        faction = ast.literal_eval(str(x))
+        locationString = faction["factionLandClaim"]
+        locations = locationString.split(",")
+        emoji = get(ctx.guild.emojis,name=faction["factionLogo"])
+        for y in locations:
+            map[int(y)-1] = f"{emoji}"
+    
+    #Formatting the map for Discord
+    for x in range(9):
+        map.insert((((x*10)+10)+x),"\n")
+    string = ""
+    for x in map:
+        string += x
+    embed = discord.Embed(title="Factions Map",description=string, colour=PINK)
     await ctx.send(embed=embed)
+
 
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
@@ -413,9 +436,6 @@ async def testmsgs(ctx):
     await bot.titan.send("Test")
     await bot.adminChat.send("Test")
 
-@bot.command(name="file")
-async def file(ctx):
-    await ctx.send(ctx.message.attachments)
 
 #Events ---------------------------------------------------------------------
 
