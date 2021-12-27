@@ -3,6 +3,7 @@ VERSION = 'V0.1.0 FACTIONS PT.1'
 import json
 import os
 import ast
+import re
 from warnings import resetwarnings
 from discord import colour, embeds, member
 from discord.ext.commands.converter import MemberConverter
@@ -71,6 +72,23 @@ def getUserFaction(id):
             if factionData["factionMembers"] == str(id):
                 return factionData
 
+def updateFaction(faction):
+    json = {
+        "id":faction["id"],
+        "factionName":faction["factionName"],
+        "factionIncome":faction["factionIncome"],
+        "factionMembers":faction["factionMembers"],
+        "factionLandClaim":faction["factionLandClaim"],
+        "factionLogo":faction["factionLogo"],
+        "attack":faction["attack"],
+        "defense":faction["defense"],
+        "utility":faction["utility"],
+        "balance":faction["balance"]
+        }
+    response = requests.put(FACTION_URL+"/"+str(faction["id"]),json=json)
+    return response
+
+
 
 #Help Command --------------------------------------------------------------
 bot.remove_command('help')
@@ -79,7 +97,7 @@ async def help(ctx, comnd: str=None):
     embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','",color=PINK)
     embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot",inline=False)
     embed.add_field(name="Economy Commands",value="bal, daily, store, buy, give",inline=False)
-    embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite",inline=False)
+    embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite, deposit",inline=False)
     await ctx.send(embed=embed)
 
 # Fun Commands ------------------------------------------------------------------
@@ -94,6 +112,13 @@ shoots=[
     "https://media1.giphy.com/media/PnhOSPReBR4F5NT5so/giphy.gif?cid=ecf05e47h3dm68qa24kn353rt774w4ef9g2qe7z8lkvu75cz&rid=giphy.gif&ct=g",
     "https://media1.giphy.com/media/GEGnqhJcKyYoM/giphy.gif?cid=ecf05e47gdrly5qpksnw0bvxj5lsks749cb1tzmyi3s5n86t&rid=giphy.gif&ct=g",
     "https://media4.giphy.com/media/xTiTnnm7kR6MczdYEo/giphy.gif?cid=ecf05e47gdrly5qpksnw0bvxj5lsks749cb1tzmyi3s5n86t&rid=giphy.gif&ct=g"
+]
+
+finishers=[
+    "https://cdn.discordapp.com/attachments/923389847232733295/925093106813108244/fatality-mortal.gif",
+    "https://cdn.discordapp.com/attachments/923389847232733295/925093596149997628/mort-mortal-kombat.gif",
+    "https://cdn.discordapp.com/attachments/923389847232733295/925093170398785566/tumblr_mj6l4nBwEb1s2b58zo1_500.gif",
+    "https://cdn.discordapp.com/attachments/923389847232733295/925094364122873857/demon-slayer-tanjiro-vs-rui.gif"
 ]
 
 @bot.command(name='poyo')
@@ -129,6 +154,14 @@ async def shoot(ctx, member: MemberConverter):
     embed=discord.Embed(title=f"{ctx.author.name} shot {member.name}",color=PINK)
     imageNum = random.choice(range(0,len(shoots)))
     url = shoots[imageNum]
+    embed.set_image(url=url)
+    await ctx.send(embed=embed)
+
+@bot.command(name="finish")
+async def finish(ctx, member: MemberConverter):
+    embed=discord.Embed(title=f"{ctx.author.name} finished {member.name}",color=PINK)
+    imageNum = random.choice(range(0,len(finishers)))
+    url = finishers[imageNum]
     embed.set_image(url=url)
     await ctx.send(embed=embed)
     
@@ -250,6 +283,19 @@ factionTasks= [
     "Sleeping..."
 ]
 
+@bot.command(name="deposit")
+async def deposit(ctx,amount:int):
+    faction = getUserFaction(ctx.author.id)
+    if faction == None:
+        await ctx.send("You aren't in a faction!")
+        return
+    faction["balance"] = int(faction["balance"]) + amount
+    response = updateFaction(faction=faction)
+    if response.status_code == 204:
+        await ctx.send(f"Added {amount} to the faction vault!")
+    else:
+        await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
+
 @bot.command(name="faction")
 async def faction(ctx):  
     faction = getUserFaction(ctx.author.id)
@@ -273,8 +319,7 @@ async def faction(ctx):
         embed.add_field(name="Faction Members:",value=f"{members}",inline=False)
         status = random.choice(range(0,len(factionTasks)))
         embed.add_field(name="Faction Status:",value=f"{factionTasks[status]}",inline=False)
-        income = faction["factionIncome"]
-        embed.add_field(name="Faction Income:",value=f"{income} Tokens")
+        embed.add_field(name="Faction Stats",value=f"Income: {faction['factionIncome']} Tokens\nAttack: {faction['attack']}\nDefense: {faction['defense']}\nUtility: {faction['utility']}\nVault: {faction['balance']}Tokens")
         embed.add_field(name="Faction Plots:",value=f"{faction['factionLandClaim']}")
 
         await ctx.send(embed=embed)
@@ -306,7 +351,7 @@ async def createfaction(ctx,plot:int,*name:str):
             emojiName = emojiName.replace("'","")
             emojiName = emojiName.replace(",","")
             await ctx.guild.create_custom_emoji(name=str(emojiName),image=img_data)
-        json = {"id":f"{ctx.author.id}","factionName":f"{factionName}","factionIncome":10,"factionMembers":f"{ctx.author.id}","factionLandClaim":str(plot),"factionLogo":f"{emojiName}"}
+        json = {"id":f"{ctx.author.id}","factionName":f"{factionName}","factionIncome":10,"factionMembers":f"{ctx.author.id}","factionLandClaim":str(plot),"factionLogo":f"{emojiName}","attack":10,"defense":10,"utility":10}
         response = requests.post(FACTION_URL,json=json)   
         
         if response.status_code == 201:
@@ -331,12 +376,12 @@ async def invite(ctx,member:MemberConverter):
                 await ctx.send(f"Automatically declined invite.")
                 return
             else:
-                json = {"id":f"{faction['id']}","factionName":f"{faction['factionName']}","factionIncome":f"{faction['factionIncome']}","factionMembers":f"{faction['factionMembers'] + ',' + str(member.id)}","factionLandClaim":f"{faction['factionLandClaim']}"}          
-                reponse = requests.put(FACTION_URL + "/" + str(faction["id"]),json=json)
-                if reponse.status_code == 204:
+                faction["factionMembers"] = faction['factionMembers'] + ',' + str(member.id)
+                response = updateFaction(faction=faction)
+                if response.status_code == 204:
                     await ctx.send(f"{member} You accepted the invite. Welcome to {faction['factionName']}!")
                 else:
-                    await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {reponse.status_code}")
+                    await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
                 return
         else:
             await ctx.send(f"{member} needs to leave their faction in order to be invited to this one!")
@@ -394,6 +439,11 @@ async def map(ctx):
         string += x
     embed = discord.Embed(title="Factions Map",description=string, colour=PINK)
     await ctx.send(embed=embed)
+
+@bot.command(name="factionstore")
+async def factionstore(ctx,*selection:int):
+    if selection == None:
+        embed = discord.Embed(title="Factions Store", description="This store allows you to purcahse upgrades for your faction!")
 
 
 # Moderation Commands ------------------------------------------------------------
