@@ -325,7 +325,7 @@ async def faction(ctx):
         embed.add_field(name="Faction Members:",value=f"{members}",inline=False)
         status = random.choice(range(0,len(factionTasks)))
         embed.add_field(name="Faction Status:",value=f"{factionTasks[status]}",inline=False)
-        embed.add_field(name="Faction Stats",value=f"Income: {faction['factionIncome']} Tokens\nAttack: {faction['attack']}\nDefense: {faction['defense']}\nUtility: {faction['utility']}\nVault: {faction['balance']}Tokens")
+        embed.add_field(name="Faction Stats",value=f"Income: {faction['factionIncome']} Tokens\nAttack: {faction['attack']}\nDefense: {faction['defense']}\nUtility: {faction['utility']}\nVault: {faction['balance']} Tokens")
         embed.add_field(name="Faction Plots:",value=f"{faction['factionLandClaim']}")
 
         await ctx.send(embed=embed)
