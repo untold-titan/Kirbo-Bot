@@ -412,8 +412,9 @@ async def leavefaction(ctx):
             if emoji.name == faction["factionLogo"]:
                 await emoji.delete()
     else:
-        json = {"id":f"{faction['id']}","factionName":f"{faction['factionName']}","factionIncome":f"{faction['factionIncome']}","factionMembers":f"{string[:-1]}","factionLandClaim":f"{faction['factionLandClaim']}"}
-        response = requests.put(FACTION_URL + "/" + str(faction["id"]),json=json)
+        faction["factionMembers"] = string[:-1]
+        response = updateFaction(faction=faction)
+        
     if response.status_code == 204:
         await ctx.send("You left your faction!")
     else:
