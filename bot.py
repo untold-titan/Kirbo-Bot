@@ -1,5 +1,7 @@
 # bot.py
+
 VERSION = 'V0.1.0 FACTIONS PT.1'
+
 import json
 import os
 import ast
@@ -27,6 +29,7 @@ PINK = Color.from_rgb(255,185,209)
 
 
 USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users"
+
 FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions"
 
 intents = discord.Intents.default()
@@ -98,6 +101,8 @@ async def help(ctx, comnd: str=None):
     embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot",inline=False)
     embed.add_field(name="Economy Commands",value="bal, daily, store, buy, give",inline=False)
     embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite, deposit",inline=False)
+    embed.add_field(name="Debugging Commands",value="testapi, shutdown",inline=False)
+
     await ctx.send(embed=embed)
 
 # Fun Commands ------------------------------------------------------------------
@@ -137,6 +142,7 @@ async def roll(ctx,number_of_dice: int,number_of_sides:int):
 async def about(ctx):
     myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Cataclysm-Interactive for the Army Gang", color=PINK)
     myEmbed.set_author(name="christmas titan#1704", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
+    myEmbed.add_field(name="Changes:", value="Added support for Hours, Minutes and Seconds, Added `give` command, updated `help` command")
     myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer")
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
@@ -445,7 +451,7 @@ async def factionstore(ctx,*selection:int):
     if selection == None:
         embed = discord.Embed(title="Factions Store", description="This store allows you to purcahse upgrades for your faction!")
 
-
+        await ctx.send("Something went wrong. Try again later!")  
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
 @commands.has_role("admin")
@@ -466,6 +472,7 @@ async def unmute(ctx,member:MemberConverter):
 @bot.command(name="testapi")
 @commands.has_role("admin")
 async def testapi(ctx):
+
     responseuser = requests.get(USER_URL)
     responsestore = requests.get(FACTION_URL)
     await ctx.send(responseuser.json())
