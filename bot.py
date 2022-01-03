@@ -7,7 +7,7 @@ import os
 import ast
 import re
 from warnings import resetwarnings
-from discord import colour, embeds, member
+from discord import colour, embeds, member, user
 from discord.ext.commands.converter import MemberConverter
 import requests
 import discord
@@ -37,7 +37,6 @@ intents.members = True
 bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.listening, name='Army Gang!'))
 bot.titan=None
 
-
 @bot.event
 async def on_ready():
     bot.titan = bot.get_user(847989667088564244)
@@ -45,6 +44,14 @@ async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
 
 # Helper Functions -----------------------------------------------------------------
+def getAllUsers():
+    response = requests.get(USER_URL)
+    if response.status_code != 200:
+        return None
+    else:
+        jsonResponse = ast.literal_eval(str(response.json()))
+        return jsonResponse
+
 def getUserData(id):
     url = USER_URL + "/" + str(id)
     response = requests.get(url)
@@ -91,7 +98,28 @@ def updateFaction(faction):
     response = requests.put(FACTION_URL+"/"+str(faction["id"]),json=json)
     return response
 
+# User Income Update Function ----------------------------------------------
+from apscheduler.schedulers.background import BackgroundScheduler
 
+# Start the scheduler
+sched = BackgroundScheduler()
+
+async def job_function():
+    users = getAllUsers()
+    for user in users:
+        faction = getUserFaction(user["Id"])
+        tokens = int(user["token"]) + int(faction["factionIncome"])
+        jsonData = {"Id": user["id"], "token": tokens, "date": f"{user['date']}"}
+        response = requests.post(USER_URL,json=jsonData)
+        if(response.status_code != 204):
+            await bot.titan.send(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
+            print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
+    await bot.titan.send("Succesfully updated User's Balances!")
+         
+
+# Schedules job_function to be run once each hour
+sched.add_job(job_function,trigger='cron',hour='1')
+sched.start()
 
 #Help Command --------------------------------------------------------------
 bot.remove_command('help')
@@ -291,11 +319,17 @@ factionTasks= [
 
 @bot.command(name="deposit")
 async def deposit(ctx,amount:int):
+    user = getUserData(ctx.author.id)
     faction = getUserFaction(ctx.author.id)
     if faction == None:
         await ctx.send("You aren't in a faction!")
         return
+    if int(user["token"]) < amount:
+        await ctx.send("You don't have enough tokens! Pick a smaller amount.")
+        return
     faction["balance"] = int(faction["balance"]) + amount
+    jsonData = {"Id": f"{ctx.author.id}", "token": int(user["token"]) - amount, "date": f"{user['date']}"}
+    response = requests.put(USER_URL+"/"+str(ctx.author.id),json=jsonData)
     response = updateFaction(faction=faction)
     if response.status_code == 204:
         await ctx.send(f"Added {amount} to the faction vault!")
@@ -448,11 +482,24 @@ async def map(ctx):
     await ctx.send(embed=embed)
 
 @bot.command(name="factionstore")
-async def factionstore(ctx,*selection:int):
+async def factionstore(ctx,selection:int=None):
     if selection == None:
-        embed = discord.Embed(title="Factions Store", description="This store allows you to purcahse upgrades for your faction!")
+        embed = discord.Embed(title="Factions Store", description="This store allows you to purcahse upgrades for your faction!",colour=PINK)
+        embed.add_field(name="Faction Upgrades:",value="1. Income, $500 per level, increases income by 10 per hour. \n2. Attack, $1000 per level, increases attack by 10 per level.\n3. Defense, $1000 per level, increases defense by 10 per level.\n4. Utility, $1000 per level, increases utility by 10 per level.")
+        
+        await ctx.send(embed=embed)
+    if selection == 1:
+        faction = getUserFaction(ctx.author.id)
+        income = int(faction["factionIncome"])
+        if int(faction["balance"]) >= 500:
+            income += 10
+            faction["factionIncome"] = income
+            faction["balance"] = int(faction["balance"]) - 500
+            updateFaction(faction=faction)
+            await ctx.send(f"Income was upgraded! Your faction now makes {income} tokens per hour!")
+        else:
+            await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
 
-        await ctx.send("Something went wrong. Try again later!")  
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
 @commands.has_role("admin")
