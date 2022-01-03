@@ -104,21 +104,24 @@ from apscheduler.schedulers.background import BackgroundScheduler
 # Start the scheduler
 sched = BackgroundScheduler()
 
-async def job_function():
+def job_function():
+    print("Getting Users and adding Income!")
     users = getAllUsers()
     for user in users:
-        faction = getUserFaction(user["Id"])
-        tokens = int(user["token"]) + int(faction["factionIncome"])
-        jsonData = {"Id": user["id"], "token": tokens, "date": f"{user['date']}"}
-        response = requests.post(USER_URL,json=jsonData)
-        if(response.status_code != 204):
-            await bot.titan.send(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
-            print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
-    await bot.titan.send("Succesfully updated User's Balances!")
+        faction = getUserFaction(user["id"])
+        if faction != None:
+            amount = int(faction["factionIncome"])
+            tokens = int(user["token"]) + amount
+            jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
+            response = requests.post(USER_URL,json=jsonData)
+            if(response.status_code != 204):         
+                print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
          
 
 # Schedules job_function to be run once each hour
-sched.add_job(job_function,trigger='cron',hour='1')
+minutes = 1
+hours = 1
+sched.add_job(job_function, 'interval', hours=hours)
 sched.start()
 
 #Help Command --------------------------------------------------------------
