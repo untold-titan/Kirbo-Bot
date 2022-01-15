@@ -110,11 +110,12 @@ def job_function():
     for user in users:
         faction = getUserFaction(user["id"])
         if faction != None:
+            print("User has faction, adding income.")
             amount = int(faction["factionIncome"])
             tokens = int(user["token"]) + amount
             jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
             response = requests.post(USER_URL,json=jsonData)
-            if(response.status_code != 204):         
+            if(response.status_code != 204):
                 print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
          
 
@@ -240,7 +241,8 @@ async def daily(ctx):
             else:
                 await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
         else:
-            await ctx.send("You already claimed today's reward! Please try again tommorow")
+            dateUntil = (actualDate + timedelta(days=1)) - currentdate
+            await ctx.send(f"You already claimed today's reward! Please try again in `{dateUntil}`")
     else:
         await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
 
