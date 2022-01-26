@@ -232,7 +232,6 @@ async def daily(ctx):
         if (currentdate - actualDate).days >= 1:
             total = int(jsonResponse["token"]) + 500
             jsonData = {"Id": f"{userId}","token": total, "date": f"{currentdate.date()}T{currentdate.time().replace(microsecond=0)}"}
-            print(jsonData)
             response = requests.put(url,json=jsonData)
             if response.status_code == 204:
                 embed = discord.Embed(title="Daily Token Reward", description="You gained 500 AG Tokens!",color=PINK)
@@ -263,13 +262,12 @@ async def buy(ctx,item: int):
     if item == 1:
         if (int(data["token"]) - 15000) >= 0 and data["customRole"] != 1:
             tokens = int(data["token"]) - 15000
-            jsonData = {"Id": f"{ctx.author.id}", "token":f"{tokens}","customRole":1}
+            jsonData = {"Id": f"{ctx.author.id}", "token":f'{tokens}', "date":f'{data["date"]}',"customRole":1}
             response= requests.put(url,json=jsonData)
             if response.status_code == 204:
                 await ctx.send("You purchased a Custom Role!\nUse `,customrole <name> <color-hex-code>` to claim it!")
             else:
-                await ctx.send("There was an issue contacting the CataclysmAPI ERROR CODE = 4")
-                await bot.titan.send(f"I was unable to contact the CataclysmAPI. \n Status code is: {response.status_code}. \n JSON is: {response.json()}")
+                await ctx.send(f"There was an issue contacting the CataclysmAPI ERROR CODE = {response.status_code}")
         else:
             if data["customRole"] == 1:
                 await ctx.send("You already have a custom role!")
@@ -303,6 +301,22 @@ async def give(ctx,member: MemberConverter, amount: int):
         await ctx.send("You don't have enough tokens!")
     else:
         await ctx.send("Something went wrong. Try again later!")
+
+@bot.command(name="customrole")
+async def customrole(ctx,roleName:str,r:int,g:int,b:int):
+    data = getUserData(ctx.author.id)
+    if data["customRole"] == 1:
+        guild = ctx.guild
+        await guild.create_role(name=roleName,color=Color.from_rgb(r,g,b))
+        role = discord.utils.get(ctx.guild.roles, name=roleName)
+        gamerRole = discord.utils.get(ctx.guild.roles, name="S Tier Gamer")
+        await role.edit(position=gamerRole.position)
+        user = ctx.message.author
+        await user.add_roles(role)
+        await ctx.send("Congrats! You now have your very own role!")
+    else:
+        await ctx.send("You haven't purchased a custom role!")
+
 
 #  Faction Commands ----------------------------------------------------------------
 
