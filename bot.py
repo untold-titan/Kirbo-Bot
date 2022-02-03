@@ -2,6 +2,7 @@
 
 VERSION = 'V0.1.0 FACTIONS PT.1'
 
+from ctypes import util
 import json
 import os
 import ast
@@ -95,6 +96,7 @@ def updateFaction(faction):
         "utility":faction["utility"],
         "balance":faction["balance"]
         }
+    print(json)
     response = requests.put(FACTION_URL+"/"+str(faction["id"]),json=json)
     return response
 
@@ -105,16 +107,15 @@ from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler()
 
 def job_function():
-    print("Getting Users and adding Income!")
     users = getAllUsers()
     for user in users:
         faction = getUserFaction(user["id"])
         if faction != None:
-            print("User has faction, adding income.")
             amount = int(faction["factionIncome"])
             tokens = int(user["token"]) + amount
             jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
-            response = requests.post(USER_URL,json=jsonData)
+            print(jsonData)
+            response = requests.put(USER_URL + "/" + str(user["id"]),json=jsonData)
             if(response.status_code != 204):
                 print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
          
@@ -241,7 +242,7 @@ async def daily(ctx):
                 await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
         else:
             dateUntil = (actualDate + timedelta(days=1)) - currentdate
-            await ctx.send(f"You already claimed today's reward! Please try again in `{dateUntil}`")
+            await ctx.send(f"You already claimed today's reward! Please try again in `{dateUntil.replace(microsecond=0)}`")
     else:
         await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
 
@@ -499,11 +500,11 @@ async def map(ctx):
         string += x
     embed = discord.Embed(title="Factions Map",description=string, colour=PINK)
     await ctx.send(embed=embed)
-
+# this function was a PAIN IN THE ASS
 @bot.command(name="factionstore")
 async def factionstore(ctx,selection:int=None):
     if selection == None:
-        embed = discord.Embed(title="Factions Store", description="This store allows you to purcahse upgrades for your faction!",colour=PINK)
+        embed = discord.Embed(title="Factions Store", description="This store allows you to purchase upgrades for your faction!",colour=PINK)
         embed.add_field(name="Faction Upgrades:",value="1. Income, $500 per level, increases income by 10 per hour. \n2. Attack, $1000 per level, increases attack by 10 per level.\n3. Defense, $1000 per level, increases defense by 10 per level.\n4. Utility, $1000 per level, increases utility by 10 per level.")
         
         await ctx.send(embed=embed)
@@ -518,6 +519,41 @@ async def factionstore(ctx,selection:int=None):
             await ctx.send(f"Income was upgraded! Your faction now makes {income} tokens per hour!")
         else:
             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+    elif selection == 2:
+        faction = getUserFaction(ctx.author.id)
+        attack = int(faction["attack"])
+        if int(faction["balance"]) >= 1000:
+            attack += 10
+            faction["attack"] = attack
+            faction["balance"] = int(faction["balance"]) - 1000
+            updateFaction(faction=faction)
+            await ctx.send(f"Income was upgraded! Your faction now has an attack of {attack}")
+        else:
+            await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+    elif selection == 3:
+        faction = getUserFaction(ctx.author.id)
+        defense = int(faction["defense"])
+        if int(faction["balance"]) >= 1000:
+            defense += 10
+            print(defense)
+            faction["defense"] = defense
+            faction["balance"] = int(faction["balance"]) - 1000
+            updateFaction(faction=faction)
+            await ctx.send(f"Defense was upgraded! Your faction now has a defense of {defense}")
+        else:
+            await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+    elif selection == 4:
+        faction = getUserFaction(ctx.author.id)
+        utility = int(faction["utility"])
+        if int(faction["balance"]) >= 1000:
+            utility += 10
+            faction["utility"] = utility
+            faction["balance"] = int(faction["balance"]) - 1000
+            updateFaction(faction=faction)
+            await ctx.send(f"Utility was upgraded! Your faction now has a utility of {utility}")
+        else:
+            await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+
 
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
@@ -539,17 +575,17 @@ async def unmute(ctx,member:MemberConverter):
 @bot.command(name="testapi")
 @commands.has_role("admin")
 async def testapi(ctx):
-
     responseuser = requests.get(USER_URL)
     responsestore = requests.get(FACTION_URL)
-    await ctx.send(responseuser.json())
-    await ctx.send(responsestore.json())
+    await bot.titan.send(responseuser.json())
+    await bot.titan.send(responsestore.json())
 
 @bot.command(name="shutdown")
 @commands.has_role("admin")
 async def shutdown(ctx):
     if ctx.author != bot.titan:
         await ctx.send("You aren't Titan!")
+        return
     else:
         await ctx.send("Shutting down Kirbo bot!")
         quit()
@@ -568,8 +604,7 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('Thats an admin only command!')
     await ctx.send("Something went wrong!")
-    await ctx.send(f"{error}")
-    #await bot.titan.send(f"{error}")
+    await bot.titan.send(f"{error}")
 
 @bot.event 
 async def on_member_remove(member):
