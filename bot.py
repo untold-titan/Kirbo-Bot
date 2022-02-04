@@ -242,7 +242,7 @@ async def daily(ctx):
                 await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
         else:
             dateUntil = (actualDate + timedelta(days=1)) - currentdate
-            await ctx.send(f"You already claimed today's reward! Please try again in `{dateUntil.replace(microsecond=0)}`")
+            await ctx.send(f"You already claimed today's reward! Please try again in `{dateUntil}`")
     else:
         await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
 
