@@ -596,6 +596,10 @@ async def testmsgs(ctx):
     await bot.titan.send("Test")
     await bot.adminChat.send("Test")
 
+@bot.command("repeat")
+async def repeat(ctx,*data:str):
+    await ctx.send(data)
+
 
 #Events ---------------------------------------------------------------------
 
