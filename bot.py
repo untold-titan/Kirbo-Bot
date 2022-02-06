@@ -597,7 +597,7 @@ async def testmsgs(ctx):
     await bot.adminChat.send("Test")
 
 @bot.command("repeat")
-async def repeat(ctx,*data:str):
+async def repeat(ctx,data:str):
     await ctx.send(data)
 
 
