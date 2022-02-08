@@ -284,11 +284,12 @@ async def give(ctx,member: MemberConverter, amount: int):
 
     if giver != None and taker != None and giver["token"] >= amount:
         total = int(giver["token"]) - amount
-        jsonGive = {"id":giver["id"],"token":total,"date":f"{giver['date']}"}
+        jsonGive = {"id":giver["id"],"token":int(total),"date":f"{giver['date']}"}
+        bot.titan.send(jsonGive)
         response = requests.put(USER_URL+"/"+str(member.id),json=jsonGive)
         if response.status_code == 204:
             total = int(taker["token"]) + amount
-            json = {"id":taker["id"],"token":total,"date":f"{taker['date']}"}
+            json = {"id":taker["id"],"token":int(total),"date":f"{taker['date']}"}
             response = requests.put(USER_URL+"/"+str(ctx.author.id),json=json)
             if response.status_code == 204:
                 await ctx.send(f"Gave {amount} to {member}")
