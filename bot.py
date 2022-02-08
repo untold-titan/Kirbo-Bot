@@ -1,6 +1,6 @@
 # bot.py
 
-VERSION = 'V0.1.0 FACTIONS PT.1'
+VERSION = 'V0.1.5 Factions Fixes'
 
 from ctypes import util
 import json
@@ -174,9 +174,9 @@ async def roll(ctx,number_of_dice: int,number_of_sides:int):
 @bot.command(name='about')
 async def about(ctx):
     myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Cataclysm-Interactive for the Army Gang", color=PINK)
-    myEmbed.set_author(name="christmas titan#1704", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
-    myEmbed.add_field(name="Changes:", value="Added support for Hours, Minutes and Seconds, Added `give` command, updated `help` command")
-    myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer")
+    myEmbed.set_author(name="Untold_Titan#4644", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
+    myEmbed.add_field(name="Changes:", value="Smashed a lot of bugs. Also added faction income, and upgrading stats.")
+    myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer Lord Death_Trooper - Helping with testing and Ideas.")
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
 
@@ -222,7 +222,7 @@ async def daily(ctx):
     response = requests.get(url)
     jsonResponse = ast.literal_eval(str(response.json()))
     if response.status_code == 404:
-        jsonData = {"Id": f"{userId}", "token": 500, "date": f"{currentdate}"}
+        jsonData = {"Id": f"{userId}", "token": 500, "date": f"{currentdate.date()}T{currentdate.time().replace(microsecond=0)}", "customRole": 0}
         response = requests.post(USER_URL,json=jsonData)
         if response.status_code == 201:
             embed = discord.Embed(title="Daily Token Reward", description="You gained 500 AG Tokens!",color=PINK)
@@ -284,11 +284,11 @@ async def give(ctx,member: MemberConverter, amount: int):
 
     if giver != None and taker != None and giver["token"] >= amount:
         total = int(giver["token"]) - amount
-        jsonGive = {"id":giver["id"],"token":total}
+        jsonGive = {"id":giver["id"],"token":total,"date":f"{giver['date']}"}
         response = requests.put(USER_URL+"/"+str(member.id),json=jsonGive)
         if response.status_code == 204:
             total = int(taker["token"]) + amount
-            json = {"id":taker["id"],"token":total}
+            json = {"id":taker["id"],"token":total,"date":f"{taker['date']}"}
             response = requests.put(USER_URL+"/"+str(ctx.author.id),json=json)
             if response.status_code == 204:
                 await ctx.send(f"Gave {amount} to {member}")
