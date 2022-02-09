@@ -1,6 +1,6 @@
 # bot.py
 
-VERSION = 'V0.1.6 Factions'
+VERSION = 'V0.1.7 Factions'
 
 from ctypes import util
 import json
@@ -130,10 +130,10 @@ sched.start()
 bot.remove_command('help')
 @bot.command("help")
 async def help(ctx, comnd: str=None):
-    embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','",color=PINK)
+    embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','\nSome of the commands have aliases.",color=PINK)
     embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot",inline=False)
-    embed.add_field(name="Economy Commands",value="bal, daily, store, buy, give",inline=False)
-    embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite, deposit",inline=False)
+    embed.add_field(name="Economy Commands",value="balance, daily, store, buy, give",inline=False)
+    embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite, deposit, factionstore",inline=False)
     embed.add_field(name="Debugging Commands",value="testapi, shutdown",inline=False)
 
     await ctx.send(embed=embed)
@@ -173,9 +173,9 @@ async def roll(ctx,number_of_dice: int,number_of_sides:int):
 
 @bot.command(name='about')
 async def about(ctx):
-    myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Cataclysm-Interactive for the Army Gang", color=PINK)
+    myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Untold_Titan for the Army Gang", color=PINK)
     myEmbed.set_author(name="Untold_Titan#4644", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
-    myEmbed.add_field(name="Changes:", value="Smashed a lot of bugs. \nAlso added faction income, and upgrading stats.\nAlso added an amount to `,factionstore`, so it doesnt get spammed")
+    myEmbed.add_field(name="Changes:", value="Added command aliases, fixed a few things.")
     myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer\nLord Death_Trooper - Helping with testing and Ideas.")
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
@@ -207,13 +207,13 @@ async def finish(ctx, member: MemberConverter):
 
 # Economy Commands --------------------------------------------------------------
 
-@bot.command(name='store')
+@bot.command(aliases=["s"])
 async def store(ctx):
     embed=discord.Embed(title="Army Gang Token Store",description="Use `,buy <item-number>` to purchase an item!\n\n1. Custom Role = 15000 tokens \n ",color=PINK)
     embed.set_footer(text="If you have any ideas for things to put in the store, please DM Titan! :)")
     await ctx.send(embed=embed)
 
-@bot.command(name="daily")
+@bot.command(aliases=["d"])
 async def daily(ctx):
     await ctx.send("Hold on a sec, this might take some time!")
     currentdate = datetime.now()
@@ -246,7 +246,7 @@ async def daily(ctx):
     else:
         await ctx.send(f"There was an issue contacting the CataclysmAPI (ERROR CODE = {response.status_code})")
 
-@bot.command(name="bal")
+@bot.command(aliases=["balance","b"])
 async def bal(ctx):
     jsonResponse = getUserData(ctx.author.id)
     if jsonResponse == None:
@@ -334,10 +334,11 @@ factionTasks= [
     "Plotting a coupé...",
     "Hiding bodies...",
     "Nothing...",
-    "Sleeping..."
+    "Sleeping...",
+    "Killing 100 Bidoofs, because why tf not..."
 ]
 
-@bot.command(name="deposit")
+@bot.command(aliases=["dep"])
 async def deposit(ctx,amount:int):
     user = getUserData(ctx.author.id)
     faction = getUserFaction(ctx.author.id)
@@ -429,7 +430,7 @@ async def invite(ctx,member:MemberConverter):
         if invited == None:
             await ctx.send(f"{member} type `y` to accept the invitiation!")
             def check(m: discord.Message):
-                return m.author.id == member.id and m.channel.id == ctx.channel.id and m.content =="y"
+                return m.author.id == member.id and m.channel.id == ctx.channel.id and m.content == "y" or "Y" 
             try:
                 msg = await bot.wait_for(event = 'message', check = check, timeout = 60.0)
             except asyncio.TimeoutError:
@@ -554,6 +555,9 @@ async def factionstore(ctx,selection:int=None,amount:int=1):
         else:
             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
 
+# @bot.command(name="attack")
+# async def attack(ctx,plot:int):
+#     await ctx.send("This command is NOT finished yet")
 
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
