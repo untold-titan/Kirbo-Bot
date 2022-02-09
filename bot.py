@@ -611,7 +611,7 @@ async def repeat(ctx,data:str):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('Thats an admin only command!')
-    await ctx.send("Something went wrong!")
+    await ctx.send(f"Something went wrong!\n{error}")
     await bot.titan.send(f"{error}")
 
 @bot.event 
