@@ -357,7 +357,7 @@ async def deposit(ctx,amount:int):
     else:
         await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
 
-@bot.command(name="faction")
+@bot.command(aliases=["f"])
 async def faction(ctx):  
     faction = getUserFaction(ctx.author.id)
     if faction == None:
@@ -474,7 +474,7 @@ async def leavefaction(ctx):
         await ctx.send("You left your faction!")
     else:
         await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
-
+# this function was a PAIN IN THE ASS
 @bot.command(name="map")
 async def map(ctx):
     # Creating the base land map.
@@ -501,8 +501,8 @@ async def map(ctx):
         string += x
     embed = discord.Embed(title="Factions Map",description=string, colour=PINK)
     await ctx.send(embed=embed)
-# this function was a PAIN IN THE ASS
-@bot.command(name="factionstore")
+
+@bot.command(aliases=["fs","fstore"])
 async def factionstore(ctx,selection:int=None,amount:int=1):
     if selection == None:
         embed = discord.Embed(title="Factions Store", description="This store allows you to purchase upgrades for your faction!",colour=PINK)
