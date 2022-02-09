@@ -1,6 +1,6 @@
 # bot.py
 
-VERSION = 'V0.1.5 Factions Fixes'
+VERSION = 'V0.1.6 Factions'
 
 from ctypes import util
 import json
@@ -175,8 +175,8 @@ async def roll(ctx,number_of_dice: int,number_of_sides:int):
 async def about(ctx):
     myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Cataclysm-Interactive for the Army Gang", color=PINK)
     myEmbed.set_author(name="Untold_Titan#4644", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
-    myEmbed.add_field(name="Changes:", value="Smashed a lot of bugs. Also added faction income, and upgrading stats.")
-    myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer Lord Death_Trooper - Helping with testing and Ideas.")
+    myEmbed.add_field(name="Changes:", value="Smashed a lot of bugs. \nAlso added faction income, and upgrading stats.\nAlso added an amount to `,factionstore`, so it doesnt get spammed")
+    myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer\nLord Death_Trooper - Helping with testing and Ideas.")
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
 
@@ -502,7 +502,7 @@ async def map(ctx):
     await ctx.send(embed=embed)
 # this function was a PAIN IN THE ASS
 @bot.command(name="factionstore")
-async def factionstore(ctx,selection:int=None):
+async def factionstore(ctx,selection:int=None,amount:int=1):
     if selection == None:
         embed = discord.Embed(title="Factions Store", description="This store allows you to purchase upgrades for your faction!",colour=PINK)
         embed.add_field(name="Faction Upgrades:",value="1. Income, $500 per level, increases income by 10 per hour. \n2. Attack, $1000 per level, increases attack by 10 per level.\n3. Defense, $1000 per level, increases defense by 10 per level.\n4. Utility, $1000 per level, increases utility by 10 per level.")
@@ -511,10 +511,10 @@ async def factionstore(ctx,selection:int=None):
     if selection == 1:
         faction = getUserFaction(ctx.author.id)
         income = int(faction["factionIncome"])
-        if int(faction["balance"]) >= 500:
-            income += 10
+        if int(faction["balance"]) >= 500 * amount:
+            income += 10 * amount
             faction["factionIncome"] = income
-            faction["balance"] = int(faction["balance"]) - 500
+            faction["balance"] = int(faction["balance"]) - 500 * amount
             updateFaction(faction=faction)
             await ctx.send(f"Income was upgraded! Your faction now makes {income} tokens per hour!")
         else:
@@ -522,10 +522,10 @@ async def factionstore(ctx,selection:int=None):
     elif selection == 2:
         faction = getUserFaction(ctx.author.id)
         attack = int(faction["attack"])
-        if int(faction["balance"]) >= 1000:
-            attack += 10
+        if int(faction["balance"]) >= 1000 *amount :
+            attack += 10 * amount
             faction["attack"] = attack
-            faction["balance"] = int(faction["balance"]) - 1000
+            faction["balance"] = int(faction["balance"]) - 1000 * amount
             updateFaction(faction=faction)
             await ctx.send(f"Income was upgraded! Your faction now has an attack of {attack}")
         else:
@@ -533,11 +533,11 @@ async def factionstore(ctx,selection:int=None):
     elif selection == 3:
         faction = getUserFaction(ctx.author.id)
         defense = int(faction["defense"])
-        if int(faction["balance"]) >= 1000:
-            defense += 10
+        if int(faction["balance"]) >= 1000*amount:
+            defense += 10 * amount
             print(defense)
             faction["defense"] = defense
-            faction["balance"] = int(faction["balance"]) - 1000
+            faction["balance"] = int(faction["balance"]) - 1000 * amount
             updateFaction(faction=faction)
             await ctx.send(f"Defense was upgraded! Your faction now has a defense of {defense}")
         else:
@@ -545,10 +545,10 @@ async def factionstore(ctx,selection:int=None):
     elif selection == 4:
         faction = getUserFaction(ctx.author.id)
         utility = int(faction["utility"])
-        if int(faction["balance"]) >= 1000:
-            utility += 10
+        if int(faction["balance"]) >= 1000*amount:
+            utility += 10 * amount
             faction["utility"] = utility
-            faction["balance"] = int(faction["balance"]) - 1000
+            faction["balance"] = int(faction["balance"]) - 1000 * amount
             updateFaction(faction=faction)
             await ctx.send(f"Utility was upgraded! Your faction now has a utility of {utility}")
         else:
