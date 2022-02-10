@@ -430,7 +430,7 @@ async def invite(ctx,member:MemberConverter):
         if invited == None:
             await ctx.send(f"{member} type `y` to accept the invitiation!")
             def check(m: discord.Message):
-                return m.author.id == member.id and m.channel.id == ctx.channel.id and m.content == "y","Y" 
+                return m.author.id == member.id and m.channel.id == ctx.channel.id and m.content == "y"
             try:
                 msg = await bot.wait_for(event = 'message', check = check, timeout = 60.0)
             except asyncio.TimeoutError:
