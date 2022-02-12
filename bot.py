@@ -156,7 +156,9 @@ finishers=[
     "https://cdn.discordapp.com/attachments/923389847232733295/925093106813108244/fatality-mortal.gif",
     "https://cdn.discordapp.com/attachments/923389847232733295/925093596149997628/mort-mortal-kombat.gif",
     "https://cdn.discordapp.com/attachments/923389847232733295/925093170398785566/tumblr_mj6l4nBwEb1s2b58zo1_500.gif",
-    "https://cdn.discordapp.com/attachments/923389847232733295/925094364122873857/demon-slayer-tanjiro-vs-rui.gif"
+    "https://cdn.discordapp.com/attachments/923389847232733295/925094364122873857/demon-slayer-tanjiro-vs-rui.gif",
+    "https://cdn.discordapp.com/attachments/923389847232733295/940319257235976292/demon-slayer.gif",
+    "https://cdn.discordapp.com/attachments/923389847232733295/940319559859179621/astartes-warhammer.gif"
 ]
 
 @bot.command(name='poyo')
@@ -207,9 +209,37 @@ async def finish(ctx, member: MemberConverter):
 
 # Economy Commands --------------------------------------------------------------
 
-@bot.command(aliases=["s"])
+roleIDS=[
+    766132157260496926,
+    888905712275701791,
+    912464479466442832,
+    912469849421271041,
+    912457301561069638,
+    925455734307717141,
+    911664993005600768,
+    905119389244878909,
+    890006091507830864,
+    894726346184458270,
+    890006064626561034,
+    888468823144026113,
+    888816896013643858,
+    888468985392275467,
+    888939559595958364,
+    888939512514891788,
+    888939461562486785,
+    941763926327177226,
+    892479878585286696
+]
+
+@bot.command(aliases=["s","shop"])
 async def store(ctx):
-    embed=discord.Embed(title="Army Gang Token Store",description="Use `,buy <item-number>` to purchase an item!\n\n1. Custom Role = 15000 tokens \n ",color=PINK)
+    embed=discord.Embed(title="Army Gang Token Store",description="Use `,buy <item-number>` to purchase an item!",color=PINK)
+    embed.add_field(name="1. Custom Role",value="15000 Tokens")
+    i = 2
+    for roleID in roleIDS:
+        role = bot.get_guild(752023138795126856).get_role(roleID)
+        embed.add_field(name=f"{i}. {role.name}",value="Price: FREE!",inline=False)
+        i += 1
     embed.set_footer(text="If you have any ideas for things to put in the store, please DM Titan! :)")
     await ctx.send(embed=embed)
 
@@ -276,12 +306,16 @@ async def buy(ctx,item: int):
                 await ctx.send("You already have a custom role!")
                 return
             await ctx.send("You don't have enough tokens!")
+    elif item > 1:
+        role = bot.get_guild(752023138795126856).get_role(roleIDS[item - 2])
+        await ctx.author.add_roles(role)
+        await ctx.send(f"You bought: {role.name}")
 
 @bot.command(name="give")
 async def give(ctx,member: MemberConverter, amount: int):
     giver = getUserData(ctx.author.id)
     taker = getUserData(member.id)
-
+    
     if giver != None and taker != None and giver["token"] >= amount:
         total = int(giver["token"]) - amount
         jsonGive = {"id":giver["id"],"token":int(total),"date":f"{giver['date']}"}
@@ -335,7 +369,8 @@ factionTasks= [
     "Hiding bodies...",
     "Nothing...",
     "Sleeping...",
-    "Killing 100 Bidoofs, because why tf not..."
+    "Killing 100 Bidoofs, because why tf not...",
+    "Slaughtering Xenos in the name of The Emperor"
 ]
 
 @bot.command(aliases=["dep"])
