@@ -96,7 +96,6 @@ def updateFaction(faction):
         "utility":faction["utility"],
         "balance":faction["balance"]
         }
-    print(json)
     response = requests.put(FACTION_URL+"/"+str(faction["id"]),json=json)
     return response
 
@@ -114,7 +113,6 @@ def job_function():
             amount = int(faction["factionIncome"])
             tokens = int(user["token"]) + amount
             jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
-            print(jsonData)
             response = requests.put(USER_URL + "/" + str(user["id"]),json=jsonData)
             if(response.status_code != 204):
                 print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
@@ -571,7 +569,6 @@ async def factionstore(ctx,selection:int=None,amount:int=1):
         defense = int(faction["defense"])
         if int(faction["balance"]) >= 1000*amount:
             defense += 10 * amount
-            print(defense)
             faction["defense"] = defense
             faction["balance"] = int(faction["balance"]) - 1000 * amount
             updateFaction(faction=faction)
