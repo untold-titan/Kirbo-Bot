@@ -129,9 +129,9 @@ bot.remove_command('help')
 @bot.command("help")
 async def help(ctx, comnd: str=None):
     embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','\nSome of the commands have aliases.",color=PINK)
-    embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot",inline=False)
+    embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot, finish",inline=False)
     embed.add_field(name="Economy Commands",value="balance, daily, store, buy, give",inline=False)
-    embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite, deposit, factionstore",inline=False)
+    embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite, deposit, factionstore, map",inline=False)
     embed.add_field(name="Debugging Commands",value="testapi, shutdown",inline=False)
 
     await ctx.send(embed=embed)
