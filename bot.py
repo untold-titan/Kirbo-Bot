@@ -1,7 +1,5 @@
 # bot.py
 
-VERSION = 'V0.1.7 Factions'
-
 from ctypes import util
 import json
 import os
@@ -22,6 +20,8 @@ from datetime import date
 from discord.utils import get
 from requests import api
 from requests.models import Response
+
+VERSION = 'V0.1.8'
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -131,9 +131,9 @@ async def help(ctx, comnd: str=None):
     embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','\nSome of the commands have aliases.",color=PINK)
     embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot, finish",inline=False)
     embed.add_field(name="Economy Commands",value="balance, daily, store, buy, give",inline=False)
-    embed.add_field(name="Faction Commands",value="faction, createfaction, leavefaction, invite, deposit, factionstore, map",inline=False)
+    embed.add_field(name="Faction Commands",value="All Factions commands are currently disabled!",inline=False)
     embed.add_field(name="Debugging Commands",value="testapi, shutdown",inline=False)
-
+    #faction, createfaction, leavefaction, invite, deposit, factionstore
     await ctx.send(embed=embed)
 
 # Fun Commands ------------------------------------------------------------------
@@ -175,7 +175,7 @@ async def roll(ctx,number_of_dice: int,number_of_sides:int):
 async def about(ctx):
     myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Untold_Titan for the Army Gang", color=PINK)
     myEmbed.set_author(name="Untold_Titan#4644", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
-    myEmbed.add_field(name="Changes:", value="Added command aliases, fixed a few things.")
+    myEmbed.add_field(name="Changes:", value="REMOVED ALL FACTIONS COMMANDS")
     myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer\nLord Death_Trooper - Helping with testing and Ideas.")
     myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
     await ctx.send(embed=myEmbed)
@@ -355,241 +355,281 @@ async def customrole(ctx,roleName:str,r:int,g:int,b:int):
 
 #  Faction Commands ----------------------------------------------------------------
 
-factionTasks= [
-    "Cleaning the floors...",
-    "Catching Pokemon...",
-    "Secretly Building a Nuclear Weapon...",
-    "Cooking Tacos...",
-    "Serving up some fresh Pizza...",
-    "Selling 17 metric tons of weed...",
-    "Slowly decending into madness...",
-    "Plotting a coupé...",
-    "Hiding bodies...",
-    "Nothing...",
-    "Sleeping...",
-    "Killing 100 Bidoofs, because why tf not...",
-    "Slaughtering Xenos in the name of The Emperor"
-]
+# factionTasks= [
+#     "Cleaning the floors...",
+#     "Catching Pokemon...",
+#     "Secretly Building a Nuclear Weapon...",
+#     "Cooking Tacos...",
+#     "Serving up some fresh Pizza...",
+#     "Selling 17 metric tons of weed...",
+#     "Slowly decending into madness...",
+#     "Plotting a coupé...",
+#     "Hiding bodies...",
+#     "Nothing...",
+#     "Sleeping...",
+#     "Killing 100 Bidoofs, because why tf not..."
+# ]
 
-@bot.command(aliases=["dep"])
-async def deposit(ctx,amount:int):
-    user = getUserData(ctx.author.id)
-    faction = getUserFaction(ctx.author.id)
-    if faction == None:
-        await ctx.send("You aren't in a faction!")
-        return
-    if int(user["token"]) < amount:
-        await ctx.send("You don't have enough tokens! Pick a smaller amount.")
-        return
-    faction["balance"] = int(faction["balance"]) + amount
-    jsonData = {"Id": f"{ctx.author.id}", "token": int(user["token"]) - amount, "date": f"{user['date']}"}
-    response = requests.put(USER_URL+"/"+str(ctx.author.id),json=jsonData)
-    response = updateFaction(faction=faction)
-    if response.status_code == 204:
-        await ctx.send(f"Added {amount} to the faction vault!")
-    else:
-        await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
+# @bot.command(aliases=["dep"])
+# async def deposit(ctx,amount:int):
+#     user = getUserData(ctx.author.id)
+#     faction = getUserFaction(ctx.author.id)
+#     if faction == None:
+#         await ctx.send("You aren't in a faction!")
+#         return
+#     if int(user["token"]) < amount:
+#         await ctx.send("You don't have enough tokens! Pick a smaller amount.")
+#         return
+#     faction["balance"] = int(faction["balance"]) + amount
+#     jsonData = {"Id": f"{ctx.author.id}", "token": int(user["token"]) - amount, "date": f"{user['date']}"}
+#     response = requests.put(USER_URL+"/"+str(ctx.author.id),json=jsonData)
+#     response = updateFaction(faction=faction)
+#     if response.status_code == 204:
+#         await ctx.send(f"Added {amount} to the faction vault!")
+#     else:
+#         await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
 
-@bot.command(aliases=["f"])
-async def faction(ctx):  
-    faction = getUserFaction(ctx.author.id)
-    if faction == None:
-        await ctx.send("You aren't in a faction! Make one with `,createfaction <Plot-Number> <Faction-Name>` Be sure to attach a Faction Logo Image too!")
-        return
-    else:
-        factionEmoji = get(ctx.guild.emojis,name=faction["factionLogo"])
-        factionName = str(faction["factionName"])
-        factionOwner = bot.get_user(faction["id"])
-        embed = discord.Embed(title=f"{factionName} {factionEmoji}",description=f"Faction Owner: {factionOwner}",colour=PINK)
-        members = ""
-        if "," in faction["factionMembers"]:
-            membersList = str(faction["factionMembers"]).split(",")
-            for x in membersList:
-                member = bot.get_user(int(x))
-                members += str(member) + "\n"
-        else:
-            members = bot.get_user(int(faction["factionMembers"]))
+# @bot.command(aliases=["f"])
+# async def faction(ctx):  
+#     faction = getUserFaction(ctx.author.id)
+#     if faction == None:
+#         await ctx.send("You aren't in a faction! Make one with `,createfaction <Plot-Number> <Faction-Name>` Be sure to attach a Faction Logo Image too!")
+#         return
+#     else:
+#         factionEmoji = get(ctx.guild.emojis,name=faction["factionLogo"])
+#         factionName = str(faction["factionName"])
+#         factionOwner = bot.get_user(faction["id"])
+#         embed = discord.Embed(title=f"{factionName} {factionEmoji}",description=f"Faction Owner: {factionOwner}",colour=PINK)
+#         members = ""
+#         if "," in faction["factionMembers"]:
+#             membersList = str(faction["factionMembers"]).split(",")
+#             for x in membersList:
+#                 member = bot.get_user(int(x))
+#                 members += str(member) + "\n"
+#         else:
+#             members = bot.get_user(int(faction["factionMembers"]))
 
-        embed.add_field(name="Faction Members:",value=f"{members}",inline=False)
-        status = random.choice(range(0,len(factionTasks)))
-        embed.add_field(name="Faction Status:",value=f"{factionTasks[status]}",inline=False)
-        embed.add_field(name="Faction Stats",value=f"Income: {faction['factionIncome']} Tokens\nAttack: {faction['attack']}\nDefense: {faction['defense']}\nUtility: {faction['utility']}\nVault: {faction['balance']} Tokens")
-        embed.add_field(name="Faction Plots:",value=f"{faction['factionLandClaim']}")
+#         embed.add_field(name="Faction Members:",value=f"{members}",inline=False)
+#         status = random.choice(range(0,len(factionTasks)))
+#         embed.add_field(name="Faction Status:",value=f"{factionTasks[status]}",inline=False)
+#         embed.add_field(name="Faction Stats",value=f"Income: {faction['factionIncome']} Tokens\nAttack: {faction['attack']}\nDefense: {faction['defense']}\nUtility: {faction['utility']}\nVault: {faction['balance']} Tokens")
+#         embed.add_field(name="Faction Plots:",value=f"{faction['factionLandClaim']}")
 
-        await ctx.send(embed=embed)
+#         await ctx.send(embed=embed)
 
-@bot.command(name="createfaction")
-async def createfaction(ctx,plot:int,*name:str):
-    await ctx.send("Please hold for a bit. This may take a while.")
-    faction = getUserFaction(ctx.author.id)
+# @bot.command(name="createfaction")
+# async def createfaction(ctx,plot:int,*name:str):
+#     await ctx.send("Please hold for a bit. This may take a while.")
+#     faction = getUserFaction(ctx.author.id)
 
-    factionName = ""
-    for x in name:
-        factionName = factionName +" "+ x
-    if faction == None:
-        otherFactions = getAllFactions()
-        if otherFactions != None:
-            for x in otherFactions:
-                faction = ast.literal_eval(str(x))
-                plots = faction["factionLandClaim"].split(",")
-                for y in plots:
-                    if int(y) == plot:
-                        await ctx.send("This location is already owned! Please pick a different location.")
-                        return
-        if len(ctx.message.attachments) == 0:
-            await ctx.send("You need to upload a photo to create a faction!")
-            return
-        else:
-            img_data = requests.get(ctx.message.attachments[0].url).content
-            emojiName = factionName.replace(" ","")
-            emojiName = emojiName.replace("'","")
-            emojiName = emojiName.replace(",","")
-            await ctx.guild.create_custom_emoji(name=str(emojiName),image=img_data)
-        json = {"id":f"{ctx.author.id}","factionName":f"{factionName}","factionIncome":10,"factionMembers":f"{ctx.author.id}","factionLandClaim":str(plot),"factionLogo":f"{emojiName}","attack":10,"defense":10,"utility":10}
-        response = requests.post(FACTION_URL,json=json)   
+#     factionName = ""
+#     for x in name:
+#         factionName = factionName +" "+ x
+#     if faction == None:
+#         otherFactions = getAllFactions()
+#         if otherFactions != None:
+#             for x in otherFactions:
+#                 faction = ast.literal_eval(str(x))
+#                 plots = faction["factionLandClaim"].split(",")
+#                 for y in plots:
+#                     if int(y) == plot:
+#                         await ctx.send("This location is already owned! Please pick a different location.")
+#                         return
+#         if len(ctx.message.attachments) == 0:
+#             await ctx.send("You need to upload a photo to create a faction!")
+#             return
+#         else:
+#             img_data = requests.get(ctx.message.attachments[0].url).content
+#             emojiName = factionName.replace(" ","")
+#             emojiName = emojiName.replace("'","")
+#             emojiName = emojiName.replace(",","")
+#             await ctx.guild.create_custom_emoji(name=str(emojiName),image=img_data)
+#         json = {"id":f"{ctx.author.id}","factionName":f"{factionName}","factionIncome":10,"factionMembers":f"{ctx.author.id}","factionLandClaim":str(plot),"factionLogo":f"{emojiName}","attack":10,"defense":10,"utility":10}
+#         response = requests.post(FACTION_URL,json=json)   
         
-        if response.status_code == 201:
-            await ctx.send("Your faction has been created! Use `,faction` to view it!")
-        else:
-            await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
-    else:
-        await ctx.send("You're already in a Faction! Use `,faction` to view it!")
+#         if response.status_code == 201:
+#             await ctx.send("Your faction has been created! Use `,faction` to view it!")
+#         else:
+#             await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
+#     else:
+#         await ctx.send("You're already in a Faction! Use `,faction` to view it!")
 
-@bot.command(name="invite")
-async def invite(ctx,member:MemberConverter):
-    faction = getUserFaction(ctx.author.id)
-    if member != None and faction != None:
-        invited = getUserFaction(member.id)
-        if invited == None:
-            await ctx.send(f"{member} type `y` to accept the invitiation!")
-            def check(m: discord.Message):
-                return m.author.id == member.id and m.channel.id == ctx.channel.id and m.content == "y"
-            try:
-                msg = await bot.wait_for(event = 'message', check = check, timeout = 60.0)
-            except asyncio.TimeoutError:
-                await ctx.send(f"Automatically declined invite.")
-                return
-            else:
-                faction["factionMembers"] = faction['factionMembers'] + ',' + str(member.id)
-                response = updateFaction(faction=faction)
-                if response.status_code == 204:
-                    await ctx.send(f"{member} You accepted the invite. Welcome to {faction['factionName']}!")
-                else:
-                    await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
-                return
-        else:
-            await ctx.send(f"{member} needs to leave their faction in order to be invited to this one!")
-    else:
-        await ctx.send("You need to include a member to invite")
+# @bot.command(name="invite")
+# async def invite(ctx,member:MemberConverter):
+#     faction = getUserFaction(ctx.author.id)
+#     if member != None and faction != None:
+#         invited = getUserFaction(member.id)
+#         if invited == None:
+#             await ctx.send(f"{member} type `y` to accept the invitiation!")
+#             def check(m: discord.Message):
+#                 return m.author.id == member.id and m.channel.id == ctx.channel.id and m.content == "y" or "Y" 
+#             try:
+#                 msg = await bot.wait_for(event = 'message', check = check, timeout = 60.0)
+#             except asyncio.TimeoutError:
+#                 await ctx.send(f"Automatically declined invite.")
+#                 return
+#             else:
+#                 faction["factionMembers"] = faction['factionMembers'] + ',' + str(member.id)
+#                 response = updateFaction(faction=faction)
+#                 if response.status_code == 204:
+#                     await ctx.send(f"{member} You accepted the invite. Welcome to {faction['factionName']}!")
+#                 else:
+#                     await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
+#                 return
+#         else:
+#             await ctx.send(f"{member} needs to leave their faction in order to be invited to this one!")
+#     else:
+#         await ctx.send("You need to include a member to invite")
 
-@bot.command(name="leavefaction")
-async def leavefaction(ctx):
-    faction = getUserFaction(ctx.author.id)
-    if faction == None:
-        await ctx.send("You aren't in a faction!")
-        return
-    members = str(faction["factionMembers"]).split(',')
-    members.remove(str(ctx.author.id))
-    string = ""
-    for x in members:
-        string += x + ","
-    if string == "":
-        response = requests.delete(FACTION_URL + "/" + str(faction["id"]))
-        emojis = ctx.guild.emojis
-        for emoji in emojis:
-            if emoji.name == faction["factionLogo"]:
-                await emoji.delete()
-    else:
-        faction["factionMembers"] = string[:-1]
-        response = updateFaction(faction=faction)
+# @bot.command(name="leavefaction")
+# async def leavefaction(ctx):
+#     faction = getUserFaction(ctx.author.id)
+#     if faction == None:
+#         await ctx.send("You aren't in a faction!")
+#         return
+#     members = str(faction["factionMembers"]).split(',')
+#     members.remove(str(ctx.author.id))
+#     string = ""
+#     for x in members:
+#         string += x + ","
+#     if string == "":
+#         response = requests.delete(FACTION_URL + "/" + str(faction["id"]))
+#         emojis = ctx.guild.emojis
+#         for emoji in emojis:
+#             if emoji.name == faction["factionLogo"]:
+#                 await emoji.delete()
+#     else:
+#         faction["factionMembers"] = string[:-1]
+#         response = updateFaction(faction=faction)
         
-    if response.status_code == 204:
-        await ctx.send("You left your faction!")
-    else:
-        await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
-# this function was a PAIN IN THE ASS
-@bot.command(name="map")
-async def map(ctx):
-    # Creating the base land map.
-    map = []
-    landEmoji = get(ctx.guild.emojis, name="unclaimed")
-    for x in range(100):
-        map.append(f"{landEmoji}")
+#     if response.status_code == 204:
+#         await ctx.send("You left your faction!")
+#     else:
+#         await ctx.send(f"There was an issue contacting the Cataclysm API. Error code: {response.status_code}")
+# # this function was a PAIN IN THE ASS
+# @bot.command(name="map")
+# async def map(ctx):
+#     # Creating the base land map.
+#     map = []
+#     landEmoji = get(ctx.guild.emojis, name="unclaimed")
+#     for x in range(100):
+#         map.append(f"{landEmoji}")
 
-    #Adding the factions
-    factions = getAllFactions()
-    for x in factions:
-        faction = ast.literal_eval(str(x))
-        locationString = faction["factionLandClaim"]
-        locations = locationString.split(",")
-        emoji = get(ctx.guild.emojis,name=faction["factionLogo"])
-        for y in locations:
-            map[int(y)-1] = f"{emoji}"
+#     #Adding the factions
+#     factions = getAllFactions()
+#     for x in factions:
+#         faction = ast.literal_eval(str(x))
+#         locationString = faction["factionLandClaim"]
+#         locations = locationString.split(",")
+#         emoji = get(ctx.guild.emojis,name=faction["factionLogo"])
+#         for y in locations:
+#             map[int(y)-1] = f"{emoji}"
     
-    #Formatting the map for Discord
-    for x in range(9):
-        map.insert((((x*10)+10)+x),"\n")
-    string = ""
-    for x in map:
-        string += x
-    embed = discord.Embed(title="Factions Map",description=string, colour=PINK)
-    await ctx.send(embed=embed)
+#     #Formatting the map for Discord
+#     for x in range(9):
+#         map.insert((((x*10)+10)+x),"\n")
+#     string = ""
+#     for x in map:
+#         string += x
+#     embed = discord.Embed(title="Factions Map",description=string, colour=PINK)
+#     await ctx.send(embed=embed)
 
-@bot.command(aliases=["fs","fstore"])
-async def factionstore(ctx,selection:int=None,amount:int=1):
-    if selection == None:
-        embed = discord.Embed(title="Factions Store", description="This store allows you to purchase upgrades for your faction!",colour=PINK)
-        embed.add_field(name="Faction Upgrades:",value="1. Income, $500 per level, increases income by 10 per hour. \n2. Attack, $1000 per level, increases attack by 10 per level.\n3. Defense, $1000 per level, increases defense by 10 per level.\n4. Utility, $1000 per level, increases utility by 10 per level.")
+# @bot.command(aliases=["fs","fstore"])
+# async def factionstore(ctx,selection:int=None,amount:int=1):
+#     if selection == None:
+#         embed = discord.Embed(title="Factions Store", description="This store allows you to purchase upgrades for your faction!",colour=PINK)
+#         embed.add_field(name="Faction Upgrades:",value="1. Income, $500 per level, increases income by 10 per hour. \n2. Attack, $1000 per level, increases attack by 10 per level.\n3. Defense, $1000 per level, increases defense by 10 per level.\n4. Utility, $1000 per level, increases utility by 10 per level.")
         
-        await ctx.send(embed=embed)
-    if selection == 1:
-        faction = getUserFaction(ctx.author.id)
-        income = int(faction["factionIncome"])
-        if int(faction["balance"]) >= 500 * amount:
-            income += 10 * amount
-            faction["factionIncome"] = income
-            faction["balance"] = int(faction["balance"]) - 500 * amount
-            updateFaction(faction=faction)
-            await ctx.send(f"Income was upgraded! Your faction now makes {income} tokens per hour!")
-        else:
-            await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
-    elif selection == 2:
-        faction = getUserFaction(ctx.author.id)
-        attack = int(faction["attack"])
-        if int(faction["balance"]) >= 1000 *amount :
-            attack += 10 * amount
-            faction["attack"] = attack
-            faction["balance"] = int(faction["balance"]) - 1000 * amount
-            updateFaction(faction=faction)
-            await ctx.send(f"Income was upgraded! Your faction now has an attack of {attack}")
-        else:
-            await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
-    elif selection == 3:
-        faction = getUserFaction(ctx.author.id)
-        defense = int(faction["defense"])
-        if int(faction["balance"]) >= 1000*amount:
-            defense += 10 * amount
-            faction["defense"] = defense
-            faction["balance"] = int(faction["balance"]) - 1000 * amount
-            updateFaction(faction=faction)
-            await ctx.send(f"Defense was upgraded! Your faction now has a defense of {defense}")
-        else:
-            await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
-    elif selection == 4:
-        faction = getUserFaction(ctx.author.id)
-        utility = int(faction["utility"])
-        if int(faction["balance"]) >= 1000*amount:
-            utility += 10 * amount
-            faction["utility"] = utility
-            faction["balance"] = int(faction["balance"]) - 1000 * amount
-            updateFaction(faction=faction)
-            await ctx.send(f"Utility was upgraded! Your faction now has a utility of {utility}")
-        else:
-            await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+#         await ctx.send(embed=embed)
+#     if selection == 1:
+#         faction = getUserFaction(ctx.author.id)
+#         income = int(faction["factionIncome"])
+#         if int(faction["balance"]) >= 500 * amount:
+#             income += 10 * amount
+#             faction["factionIncome"] = income
+#             faction["balance"] = int(faction["balance"]) - 500 * amount
+#             updateFaction(faction=faction)
+#             await ctx.send(f"Income was upgraded! Your faction now makes {income} tokens per hour!")
+#         else:
+#             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+#     elif selection == 2:
+#         faction = getUserFaction(ctx.author.id)
+#         attack = int(faction["attack"])
+#         if int(faction["balance"]) >= 1000 *amount :
+#             attack += 10 * amount
+#             faction["attack"] = attack
+#             faction["balance"] = int(faction["balance"]) - 1000 * amount
+#             updateFaction(faction=faction)
+#             await ctx.send(f"Income was upgraded! Your faction now has an attack of {attack}")
+#         else:
+#             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+#     elif selection == 3:
+#         faction = getUserFaction(ctx.author.id)
+#         defense = int(faction["defense"])
+#         if int(faction["balance"]) >= 1000*amount:
+#             defense += 10 * amount
+#             print(defense)
+#             faction["defense"] = defense
+#             faction["balance"] = int(faction["balance"]) - 1000 * amount
+#             updateFaction(faction=faction)
+#             await ctx.send(f"Defense was upgraded! Your faction now has a defense of {defense}")
+#         else:
+#             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+#     elif selection == 4:
+#         faction = getUserFaction(ctx.author.id)
+#         utility = int(faction["utility"])
+#         if int(faction["balance"]) >= 1000*amount:
+#             utility += 10 * amount
+#             faction["utility"] = utility
+#             faction["balance"] = int(faction["balance"]) - 1000 * amount
+#             updateFaction(faction=faction)
+#             await ctx.send(f"Utility was upgraded! Your faction now has a utility of {utility}")
+#         else:
+#             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
 
 # @bot.command(name="attack")
 # async def attack(ctx,plot:int):
-#     await ctx.send("This command is NOT finished yet")
+#     # Generating the map, and figuring out the owner of the plot
+#     map = []
+#     for x in range(100):
+#         map.append(0)
+#     factions = getAllFactions()
+#     for faction in factions:
+        
+#         faction = ast.literal_eval(str(x))
+#         locationString = faction["factionLandClaim"]
+#         locations = locationString.split(",")
+#         print("Looping through the factions")
+#         for y in locations:
+#             print(map[y])
+#             if(map[y] == int(faction["id"])):
+#                 print("Found plot owner")
+    
+#     plotOwner = map[plot - 1]
+
+#     if plotOwner == 0:
+#         faction = getUserFaction(ctx.author.id)
+#         defense = int(faction["defense"])
+#         if int(faction["balance"]) >= 1000*amount:
+#             defense += 10 * amount
+#             faction["defense"] = defense
+#             faction["balance"] = int(faction["balance"]) - 1000 * amount
+#             updateFaction(faction=faction)
+#             await ctx.send(f"Defense was upgraded! Your faction now has a defense of {defense}")
+#         else:
+#             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+#     elif selection == 4:
+#         faction = getUserFaction(ctx.author.id)
+#         utility = int(faction["utility"])
+#         if int(faction["balance"]) >= 1000*amount:
+#             utility += 10 * amount
+#             faction["utility"] = utility
+#             faction["balance"] = int(faction["balance"]) - 1000 * amount
+#             updateFaction(faction=faction)
+#             await ctx.send(f"Utility was upgraded! Your faction now has a utility of {utility}")
+#         else:
+#             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+
 
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
