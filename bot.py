@@ -96,7 +96,6 @@ def updateFaction(faction):
         "utility":faction["utility"],
         "balance":faction["balance"]
         }
-    print(json)
     response = requests.put(FACTION_URL+"/"+str(faction["id"]),json=json)
     return response
 
@@ -114,7 +113,6 @@ def job_function():
             amount = int(faction["factionIncome"])
             tokens = int(user["token"]) + amount
             jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
-            print(jsonData)
             response = requests.put(USER_URL + "/" + str(user["id"]),json=jsonData)
             if(response.status_code != 204):
                 print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
@@ -131,7 +129,7 @@ bot.remove_command('help')
 @bot.command("help")
 async def help(ctx, comnd: str=None):
     embed=discord.Embed(title="Kirbo Help",description="This bot's prefix is ','\nSome of the commands have aliases.",color=PINK)
-    embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot",inline=False)
+    embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot, finish",inline=False)
     embed.add_field(name="Economy Commands",value="balance, daily, store, buy, give",inline=False)
     embed.add_field(name="Faction Commands",value="All Factions commands are currently disabled!",inline=False)
     embed.add_field(name="Debugging Commands",value="testapi, shutdown",inline=False)
@@ -156,7 +154,9 @@ finishers=[
     "https://cdn.discordapp.com/attachments/923389847232733295/925093106813108244/fatality-mortal.gif",
     "https://cdn.discordapp.com/attachments/923389847232733295/925093596149997628/mort-mortal-kombat.gif",
     "https://cdn.discordapp.com/attachments/923389847232733295/925093170398785566/tumblr_mj6l4nBwEb1s2b58zo1_500.gif",
-    "https://cdn.discordapp.com/attachments/923389847232733295/925094364122873857/demon-slayer-tanjiro-vs-rui.gif"
+    "https://cdn.discordapp.com/attachments/923389847232733295/925094364122873857/demon-slayer-tanjiro-vs-rui.gif",
+    "https://cdn.discordapp.com/attachments/923389847232733295/940319257235976292/demon-slayer.gif",
+    "https://cdn.discordapp.com/attachments/923389847232733295/940319559859179621/astartes-warhammer.gif"
 ]
 
 @bot.command(name='poyo')
@@ -207,9 +207,37 @@ async def finish(ctx, member: MemberConverter):
 
 # Economy Commands --------------------------------------------------------------
 
-@bot.command(aliases=["s"])
+roleIDS=[
+    766132157260496926,
+    888905712275701791,
+    912464479466442832,
+    912469849421271041,
+    912457301561069638,
+    925455734307717141,
+    911664993005600768,
+    905119389244878909,
+    890006091507830864,
+    894726346184458270,
+    890006064626561034,
+    888468823144026113,
+    888816896013643858,
+    888468985392275467,
+    888939559595958364,
+    888939512514891788,
+    888939461562486785,
+    941763926327177226,
+    892479878585286696
+]
+
+@bot.command(aliases=["s","shop"])
 async def store(ctx):
-    embed=discord.Embed(title="Army Gang Token Store",description="Use `,buy <item-number>` to purchase an item!\n\n1. Custom Role = 15000 tokens \n ",color=PINK)
+    embed=discord.Embed(title="Army Gang Token Store",description="Use `,buy <item-number>` to purchase an item!",color=PINK)
+    embed.add_field(name="1. Custom Role",value="15000 Tokens")
+    i = 2
+    for roleID in roleIDS:
+        role = bot.get_guild(752023138795126856).get_role(roleID)
+        embed.add_field(name=f"{i}. {role.name}",value="Price: FREE!",inline=False)
+        i += 1
     embed.set_footer(text="If you have any ideas for things to put in the store, please DM Titan! :)")
     await ctx.send(embed=embed)
 
@@ -276,12 +304,16 @@ async def buy(ctx,item: int):
                 await ctx.send("You already have a custom role!")
                 return
             await ctx.send("You don't have enough tokens!")
+    elif item > 1:
+        role = bot.get_guild(752023138795126856).get_role(roleIDS[item - 2])
+        await ctx.author.add_roles(role)
+        await ctx.send(f"You bought: {role.name}")
 
 @bot.command(name="give")
 async def give(ctx,member: MemberConverter, amount: int):
     giver = getUserData(ctx.author.id)
     taker = getUserData(member.id)
-
+    
     if giver != None and taker != None and giver["token"] >= amount:
         total = int(giver["token"]) - amount
         jsonGive = {"id":giver["id"],"token":int(total),"date":f"{giver['date']}"}
@@ -555,34 +587,48 @@ async def customrole(ctx,roleName:str,r:int,g:int,b:int):
 #         else:
 #             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
 
-@bot.command(name="attack")
-async def attack(ctx,plot:int):
-    # Generating the map, and figuring out the owner of the plot
-    map = []
-    for x in range(100):
-        map.append(0)
-    factions = getAllFactions()
-    for faction in factions:
+# @bot.command(name="attack")
+# async def attack(ctx,plot:int):
+#     # Generating the map, and figuring out the owner of the plot
+#     map = []
+#     for x in range(100):
+#         map.append(0)
+#     factions = getAllFactions()
+#     for faction in factions:
         
-        faction = ast.literal_eval(str(x))
-        locationString = faction["factionLandClaim"]
-        locations = locationString.split(",")
-        print("Looping through the factions")
-        for y in locations:
-            print(map[y])
-            if(map[y] == int(faction["id"])):
-                print("Found plot owner")
+#         faction = ast.literal_eval(str(x))
+#         locationString = faction["factionLandClaim"]
+#         locations = locationString.split(",")
+#         print("Looping through the factions")
+#         for y in locations:
+#             print(map[y])
+#             if(map[y] == int(faction["id"])):
+#                 print("Found plot owner")
     
-    plotOwner = map[plot - 1]
+#     plotOwner = map[plot - 1]
 
-    if plotOwner == 0:
-        faction = getUserFaction(ctx.author.id)
-        locationString = faction["factionLandClaim"]
-        print("Made it here")
-        locationString += f",{str(plot)}"
-        updateFaction(faction=faction)
-        await ctx.send("You Conquered that plot!")
-        return 
+#     if plotOwner == 0:
+#         faction = getUserFaction(ctx.author.id)
+#         defense = int(faction["defense"])
+#         if int(faction["balance"]) >= 1000*amount:
+#             defense += 10 * amount
+#             faction["defense"] = defense
+#             faction["balance"] = int(faction["balance"]) - 1000 * amount
+#             updateFaction(faction=faction)
+#             await ctx.send(f"Defense was upgraded! Your faction now has a defense of {defense}")
+#         else:
+#             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
+#     elif selection == 4:
+#         faction = getUserFaction(ctx.author.id)
+#         utility = int(faction["utility"])
+#         if int(faction["balance"]) >= 1000*amount:
+#             utility += 10 * amount
+#             faction["utility"] = utility
+#             faction["balance"] = int(faction["balance"]) - 1000 * amount
+#             updateFaction(faction=faction)
+#             await ctx.send(f"Utility was upgraded! Your faction now has a utility of {utility}")
+#         else:
+#             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
 
 
 # Moderation Commands ------------------------------------------------------------
