@@ -1,13 +1,7 @@
 # bot.py
 
-from ctypes import util
-import json
 import os
 import ast
-import re
-from urllib import response
-from warnings import resetwarnings
-from discord import colour, embeds, member, user
 from discord.ext.commands.converter import MemberConverter
 import requests
 import discord
@@ -17,10 +11,11 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from discord import Color
 from datetime import datetime, timedelta
-from datetime import date
 from discord.utils import get
-from requests import api
-from requests.models import Response
+import Helper
+import sys
+sys.path.insert(0,"Commands")
+from Fun import FunCog
 
 VERSION = 'V0.1.8'
 
@@ -45,95 +40,8 @@ bot.titan=None
 async def on_ready():
     bot.titan = bot.get_user(847989667088564244)
     bot.adminChat = bot.get_channel(764867760957947934)
+    bot.add_cog(FunCog(bot))
     print(f'{bot.user.name} has connected to Discord!')
-
-# Helper Functions -----------------------------------------------------------------
-def getAllUsers():
-    response = requests.get(USER_URL)
-    if response.status_code != 200:
-        return None
-    else:
-        jsonResponse = ast.literal_eval(str(response.json()))
-        return jsonResponse
-
-def getUserData(id):
-    url = USER_URL + "/" + str(id)
-    response = requests.get(url)
-    if response.status_code != 200:
-        return None
-    else:
-        jsonResponse = ast.literal_eval(str(response.json()))
-        return jsonResponse
-
-def getAllFactions():
-    response = requests.get(FACTION_URL)
-    if response.status_code != 200:
-        return None
-    else:
-        jsonResponse = ast.literal_eval(str(response.json()))
-        return jsonResponse
-
-
-def getAllMapTiles():
-    response = requests.get(MAPS_URL)
-    if response.status_code != 200:
-        return None
-    else:
-        jsonResponse = ast.literal_eval(str(response.json()))
-        return jsonResponse
-
-def getMapTile(id):
-    response = requests.get(MAPS_URL + str(id))
-    if response.status_code != 200:
-        return None
-    else: 
-        jsonResponse = ast.literal_eval(str(response.json()))
-        return jsonResponse
-
-def claimMapTile(id,newOwner):
-    response = requests.get(MAPS_URL + str(id))
-    if response.status_code != 200:
-        return None
-    else: 
-        jsonRespnse = ast.literal_eval(str(response.json()))
-        jsonRespnse["plotOwner"] = newOwner
-
-        response = requests.put(MAPS_URL + str(id),json=jsonRespnse)
-        print(response.content)
-        if response.status_code != 204:
-            return None
-        else:
-            return True
-
-
-def getUserFaction(id):
-    response = getAllFactions()
-    for x in response:
-        factionData = ast.literal_eval(str(x))
-        if ',' in factionData["factionMembers"]:
-            members = str(factionData["factionMembers"]).split(",")
-            for y in members:
-                if y == str(id):
-                    return factionData
-        else:
-            if factionData["factionMembers"] == str(id):
-                return factionData
-
-def updateFaction(faction):
-    json = {
-        "id":faction["id"],
-        "factionName":faction["factionName"],
-        "factionIncome":faction["factionIncome"],
-        "factionMembers":faction["factionMembers"],
-        "factionLandClaim":faction["factionLandClaim"],
-        "factionLogo":faction["factionLogo"],
-        "attack":faction["attack"],
-        "defense":faction["defense"],
-        "utility":faction["utility"],
-        "balance":faction["balance"]
-        }
-    response = requests.put(FACTION_URL+"/"+str(faction["id"]),json=json)
-    return response
 
 # User Income Update Function ----------------------------------------------
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -142,9 +50,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler()
 
 def job_function():
-    users = getAllUsers()
+    users = Helper.getAllUsers()
     for user in users:
-        faction = getUserFaction(user["id"])
+        faction = Helper.getUserFaction(user["id"])
         if faction != None:
             amount = int(faction["factionIncome"])
             tokens = int(user["token"]) + amount
@@ -172,74 +80,6 @@ async def help(ctx, comnd: str=None):
     #faction, createfaction, leavefaction, invite, deposit, factionstore
     await ctx.send(embed=embed)
 
-# Fun Commands ------------------------------------------------------------------
-slaps=[
-    "https://media1.giphy.com/media/u8maN0dMhVWPS/giphy.gif?cid=ecf05e47qxkggg1r4jinkln0tb1u3dpifv9oi5qlh6pwha5g&rid=giphy.gif&ct=g",
-    "https://media2.giphy.com/media/xUO4t2gkWBxDi/giphy.gif?cid=ecf05e472gsaenvi78og92yzidg1n3vwsqnrqc46wvm0mzn1&rid=giphy.gif&ct=g",
-    "https://media3.giphy.com/media/rCftUAVPLExZC/giphy.gif?cid=ecf05e47l30hhg2uu0gxsk5c10a1szljgzutl9zqddp4jz12&rid=giphy.gif&ct=g",
-    "https://media3.giphy.com/media/4IDCnoWDFLTLa/giphy.gif?cid=ecf05e47v9srymnrqq83jpdet5046u0r3lpzblkkcj0zqwul&rid=giphy.gif&ct=g"
-]
-
-shoots=[
-    "https://media1.giphy.com/media/PnhOSPReBR4F5NT5so/giphy.gif?cid=ecf05e47h3dm68qa24kn353rt774w4ef9g2qe7z8lkvu75cz&rid=giphy.gif&ct=g",
-    "https://media1.giphy.com/media/GEGnqhJcKyYoM/giphy.gif?cid=ecf05e47gdrly5qpksnw0bvxj5lsks749cb1tzmyi3s5n86t&rid=giphy.gif&ct=g",
-    "https://media4.giphy.com/media/xTiTnnm7kR6MczdYEo/giphy.gif?cid=ecf05e47gdrly5qpksnw0bvxj5lsks749cb1tzmyi3s5n86t&rid=giphy.gif&ct=g"
-]
-
-finishers=[
-    "https://cdn.discordapp.com/attachments/923389847232733295/925093106813108244/fatality-mortal.gif",
-    "https://cdn.discordapp.com/attachments/923389847232733295/925093596149997628/mort-mortal-kombat.gif",
-    "https://cdn.discordapp.com/attachments/923389847232733295/925093170398785566/tumblr_mj6l4nBwEb1s2b58zo1_500.gif",
-    "https://cdn.discordapp.com/attachments/923389847232733295/925094364122873857/demon-slayer-tanjiro-vs-rui.gif",
-    "https://cdn.discordapp.com/attachments/923389847232733295/940319257235976292/demon-slayer.gif",
-    "https://cdn.discordapp.com/attachments/923389847232733295/940319559859179621/astartes-warhammer.gif"
-]
-
-@bot.command(name='poyo')
-async def poyo(ctx):
-    await ctx.send('Poyo!')
-
-@bot.command(name="roll")
-async def roll(ctx,number_of_dice: int,number_of_sides:int): 
-    dice = [
-        str(random.choice(range(1, number_of_sides + 1)))
-        for _ in range(number_of_dice)
-    ]
-    await ctx.send(', '.join(dice))
-
-@bot.command(name='about')
-async def about(ctx):
-    myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Untold_Titan for the Army Gang", color=PINK)
-    myEmbed.set_author(name="Untold_Titan#4644", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
-    myEmbed.add_field(name="Changes:", value="REMOVED ALL FACTIONS COMMANDS")
-    myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer\nLord Death_Trooper - Helping with testing and Ideas.")
-    myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
-    await ctx.send(embed=myEmbed)
-
-@bot.command(name="slap")
-async def slap(ctx, member: MemberConverter):
-    embed=discord.Embed(title=f"{ctx.author.name} slapped {member.name}",color=PINK)
-    imageNum = random.choice(range(0,len(slaps)))
-    url = slaps[imageNum]
-    embed.set_image(url=url)
-    await ctx.send(embed=embed)
-
-@bot.command(name="shoot")
-async def shoot(ctx, member: MemberConverter):
-    embed=discord.Embed(title=f"{ctx.author.name} shot {member.name}",color=PINK)
-    imageNum = random.choice(range(0,len(shoots)))
-    url = shoots[imageNum]
-    embed.set_image(url=url)
-    await ctx.send(embed=embed)
-
-@bot.command(name="finish")
-async def finish(ctx, member: MemberConverter):
-    embed=discord.Embed(title=f"{ctx.author.name} finished {member.name}",color=PINK)
-    imageNum = random.choice(range(0,len(finishers)))
-    url = finishers[imageNum]
-    embed.set_image(url=url)
-    await ctx.send(embed=embed)
-    
 
 # Economy Commands --------------------------------------------------------------
 
@@ -312,7 +152,7 @@ async def daily(ctx):
 
 @bot.command(aliases=["balance","b"])
 async def bal(ctx):
-    jsonResponse = getUserData(ctx.author.id)
+    jsonResponse = Helper.getUserData(ctx.author.id)
     if jsonResponse == None:
         json = {"Id":f"{ctx.author.id}"}
         response= requests.post(USER_URL,json)
@@ -325,7 +165,7 @@ async def bal(ctx):
 @bot.command(name="buy")
 async def buy(ctx,item: int):
     url = USER_URL + "/" + str(ctx.author.id)
-    data = getUserData(ctx.author.id)
+    data = Helper.getUserData(ctx.author.id)
     if item == 1:
         if (int(data["token"]) - 15000) >= 0 and data["customRole"] != 1:
             tokens = int(data["token"]) - 15000
@@ -347,8 +187,8 @@ async def buy(ctx,item: int):
 
 @bot.command(name="give")
 async def give(ctx,member: MemberConverter, amount: int):
-    giver = getUserData(ctx.author.id)
-    taker = getUserData(member.id)
+    giver = Helper.getUserData(ctx.author.id)
+    taker = Helper.getUserData(member.id)
     
     if giver != None and taker != None and giver["token"] >= amount:
         total = int(giver["token"]) - amount
@@ -375,7 +215,7 @@ async def give(ctx,member: MemberConverter, amount: int):
 
 @bot.command(name="customrole")
 async def customrole(ctx,roleName:str,r:int,g:int,b:int):
-    data = getUserData(ctx.author.id)
+    data = Helper.getUserData(ctx.author.id)
     if data["customRole"] == 1:
         guild = ctx.guild
         await guild.create_role(name=roleName,color=Color.from_rgb(r,g,b))
@@ -408,8 +248,8 @@ factionTasks= [
 
 @bot.command(aliases=["dep"])
 async def deposit(ctx,amount:int):
-    user = getUserData(ctx.author.id)
-    faction = getUserFaction(ctx.author.id)
+    user = Helper.getUserData(ctx.author.id)
+    faction = Helper.getUserFaction(ctx.author.id)
     if faction == None:
         await ctx.send("You aren't in a faction!")
         return
@@ -419,7 +259,7 @@ async def deposit(ctx,amount:int):
     faction["balance"] = int(faction["balance"]) + amount
     jsonData = {"Id": f"{ctx.author.id}", "token": int(user["token"]) - amount, "date": f"{user['date']}"}
     response = requests.put(USER_URL+"/"+str(ctx.author.id),json=jsonData)
-    response = updateFaction(faction=faction)
+    response = Helper.updateFaction(faction=faction)
     if response.status_code == 204:
         await ctx.send(f"Added {amount} to the faction vault!")
     else:
@@ -427,7 +267,7 @@ async def deposit(ctx,amount:int):
 
 @bot.command(aliases=["f"])
 async def faction(ctx):  
-    faction = getUserFaction(ctx.author.id)
+    faction = Helper.getUserFaction(ctx.author.id)
     if faction == None:
         await ctx.send("You aren't in a faction! Make one with `,createfaction <Plot-Number> <Faction-Name>` Be sure to attach a Faction Logo Image too!")
         return
@@ -448,7 +288,7 @@ async def faction(ctx):
         status = random.choice(range(0,len(factionTasks)))
         embed.add_field(name="Faction Status:",value=f"{factionTasks[status]}",inline=False)
         embed.add_field(name="Faction Stats",value=f"Income: {faction['factionIncome']} Tokens\nAttack: {faction['attack']}\nDefense: {faction['defense']}\nUtility: {faction['utility']}\nVault: {faction['balance']} Tokens")
-        map = getAllMapTiles()
+        map = Helper.getAllMapTiles()
         tilesOwned = []
         for x in map:
             if x["plotOwner"] == faction["factionName"]:
@@ -460,14 +300,14 @@ async def faction(ctx):
 @bot.command(name="createfaction")
 async def createfaction(ctx,plot:int,*name:str):
     await ctx.send("Please hold for a bit. This may take a while.")
-    faction = getUserFaction(ctx.author.id)
+    faction = Helper.getUserFaction(ctx.author.id)
 
     factionName = ""
     for x in name:
         factionName = factionName +" "+ x
     if faction == None:
         #Checking if the Plot is already claimed. 
-        tile = getMapTile(plot)
+        tile = Helper.getMapTile(plot)
         if tile["plotOwner"] != "Unclaimed!":
             await ctx.send("This plot is already claimed!")
             return
@@ -481,7 +321,7 @@ async def createfaction(ctx,plot:int,*name:str):
             emojiName = emojiName.replace("'","")
             emojiName = emojiName.replace(",","")
             await ctx.guild.create_custom_emoji(name=str(emojiName),image=img_data)
-        succedded = claimMapTile(plot,factionName)
+        succedded = Helper.claimMapTile(plot,factionName)
         if succedded != True:
             await ctx.send("Failed to claim plot. Please try again later!")
             return
@@ -497,9 +337,9 @@ async def createfaction(ctx,plot:int,*name:str):
 
 @bot.command(name="invite")
 async def invite(ctx,member:MemberConverter):
-    faction = getUserFaction(ctx.author.id)
+    faction = Helper.getUserFaction(ctx.author.id)
     if member != None and faction != None:
-        invited = getUserFaction(member.id)
+        invited = Helper.getUserFaction(member.id)
         if invited == None:
             await ctx.send(f"{member} type `y` to accept the invitiation!")
             def check(m: discord.Message):
@@ -511,7 +351,7 @@ async def invite(ctx,member:MemberConverter):
                 return
             else:
                 faction["factionMembers"] = faction['factionMembers'] + ',' + str(member.id)
-                response = updateFaction(faction=faction)
+                response = Helper.updateFaction(faction=faction)
                 if response.status_code == 204:
                     await ctx.send(f"{member} You accepted the invite. Welcome to {faction['factionName']}!")
                 else:
@@ -524,7 +364,7 @@ async def invite(ctx,member:MemberConverter):
 
 @bot.command(name="leavefaction")
 async def leavefaction(ctx):
-    faction = getUserFaction(ctx.author.id)
+    faction = Helper.getUserFaction(ctx.author.id)
     if faction == None:
         await ctx.send("You aren't in a faction!")
         return
@@ -541,7 +381,7 @@ async def leavefaction(ctx):
                 await emoji.delete()
     else:
         faction["factionMembers"] = string[:-1]
-        response = updateFaction(faction=faction)
+        response = Helper.updateFaction(faction=faction)
         
     if response.status_code == 204:
         await ctx.send("You left your faction!")
@@ -556,8 +396,8 @@ async def map(ctx):
     for x in range(100):
         map.append(f"{landEmoji}")
 
-    factions = getAllFactions()
-    mapTiles = getAllMapTiles()
+    factions = Helper.getAllFactions()
+    mapTiles = Helper.getAllMapTiles()
     for i in mapTiles:
         if i['plotOwner'] != "Unclaimed!":
             map[int(i["plotNum"]) - 1] = i["plotOwner"]
@@ -579,47 +419,47 @@ async def factionstore(ctx,selection:int=None,amount:int=1):
         
         await ctx.send(embed=embed)
     if selection == 1:
-        faction = getUserFaction(ctx.author.id)
+        faction = Helper.getUserFaction(ctx.author.id)
         income = int(faction["factionIncome"])
         if int(faction["balance"]) >= 500 * amount:
             income += 10 * amount
             faction["factionIncome"] = income
             faction["balance"] = int(faction["balance"]) - 500 * amount
-            updateFaction(faction=faction)
+            Helper.updateFaction(faction=faction)
             await ctx.send(f"Income was upgraded! Your faction now makes {income} tokens per hour!")
         else:
             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
     elif selection == 2:
-        faction = getUserFaction(ctx.author.id)
+        faction = Helper.getUserFaction(ctx.author.id)
         attack = int(faction["attack"])
         if int(faction["balance"]) >= 1000 *amount :
             attack += 10 * amount
             faction["attack"] = attack
             faction["balance"] = int(faction["balance"]) - 1000 * amount
-            updateFaction(faction=faction)
+            Helper.updateFaction(faction=faction)
             await ctx.send(f"Income was upgraded! Your faction now has an attack of {attack}")
         else:
             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
     elif selection == 3:
-        faction = getUserFaction(ctx.author.id)
+        faction = Helper.getUserFaction(ctx.author.id)
         defense = int(faction["defense"])
         if int(faction["balance"]) >= 1000*amount:
             defense += 10 * amount
             print(defense)
             faction["defense"] = defense
             faction["balance"] = int(faction["balance"]) - 1000 * amount
-            updateFaction(faction=faction)
+            Helper.updateFaction(faction=faction)
             await ctx.send(f"Defense was upgraded! Your faction now has a defense of {defense}")
         else:
             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
     elif selection == 4:
-        faction = getUserFaction(ctx.author.id)
+        faction = Helper.getUserFaction(ctx.author.id)
         utility = int(faction["utility"])
         if int(faction["balance"]) >= 1000*amount:
             utility += 10 * amount
             faction["utility"] = utility
             faction["balance"] = int(faction["balance"]) - 1000 * amount
-            updateFaction(faction=faction)
+            Helper.updateFaction(faction=faction)
             await ctx.send(f"Utility was upgraded! Your faction now has a utility of {utility}")
         else:
             await ctx.send("Your faction vault doesn't have enough tokens! Deposit some with `,deposit <amount>`")
@@ -630,7 +470,7 @@ async def attack(ctx,plot:int):
     map = []
     for x in range(100):
         map.append(0)
-    factions = getAllFactions()
+    factions = Helper.getAllFactions()
     for faction in factions:
         
         faction = ast.literal_eval(str(x))
