@@ -82,6 +82,30 @@ def getAllMapTiles():
         jsonResponse = ast.literal_eval(str(response.json()))
         return jsonResponse
 
+def getMapTile(id):
+    response = requests.get(MAPS_URL + str(id))
+    if response.status_code != 200:
+        return None
+    else: 
+        jsonResponse = ast.literal_eval(str(response.json()))
+        return jsonResponse
+
+def claimMapTile(id,newOwner):
+    response = requests.get(MAPS_URL + str(id))
+    if response.status_code != 200:
+        return None
+    else: 
+        jsonRespnse = ast.literal_eval(str(response.json()))
+        jsonRespnse["plotOwner"] = newOwner
+
+        response = requests.put(MAPS_URL + str(id),json=jsonRespnse)
+        print(response.content)
+        if response.status_code != 204:
+            return None
+        else:
+            return True
+
+
 def getUserFaction(id):
     response = getAllFactions()
     for x in response:
@@ -442,15 +466,12 @@ async def createfaction(ctx,plot:int,*name:str):
     for x in name:
         factionName = factionName +" "+ x
     if faction == None:
-        otherFactions = getAllFactions()
-        if otherFactions != None:
-            for x in otherFactions:
-                faction = ast.literal_eval(str(x))
-                plots = faction["factionLandClaim"].split(",")
-                for y in plots:
-                    if int(y) == plot:
-                        await ctx.send("This location is already owned! Please pick a different location.")
-                        return
+        #Checking if the Plot is already claimed. 
+        tile = getMapTile(plot)
+        if tile["plotOwner"] != "Unclaimed!":
+            await ctx.send("This plot is already claimed!")
+            return
+        # Checking for image, If there is one, upload it as an emoji
         if len(ctx.message.attachments) == 0:
             await ctx.send("You need to upload a photo to create a faction!")
             return
@@ -460,6 +481,10 @@ async def createfaction(ctx,plot:int,*name:str):
             emojiName = emojiName.replace("'","")
             emojiName = emojiName.replace(",","")
             await ctx.guild.create_custom_emoji(name=str(emojiName),image=img_data)
+        succedded = claimMapTile(plot,factionName)
+        if succedded != True:
+            await ctx.send("Failed to claim plot. Please try again later!")
+            return
         json = {"id":f"{ctx.author.id}","factionName":f"{factionName}","factionIncome":10,"factionMembers":f"{ctx.author.id}","factionLandClaim":str(plot),"factionLogo":f"{emojiName}","attack":10,"defense":10,"utility":10}
         response = requests.post(FACTION_URL,json=json)   
         
