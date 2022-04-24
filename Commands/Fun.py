@@ -29,7 +29,7 @@ finishers=[
     "https://cdn.discordapp.com/attachments/923389847232733295/940319559859179621/astartes-warhammer.gif"
 ]
 class FunCog(commands.Cog):
-    def ___init___(self,bot):
+    def __init__(self,bot):
         self.bot = bot
 
     @commands.command(name='poyo')
