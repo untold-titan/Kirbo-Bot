@@ -9,7 +9,7 @@ for x in range(tilesToCreate):
     plot = random.randrange(1,4)
     json={
         "plotNum":x + 1,
-        "plotOwner":0,
+        "plotOwner":"Unclaimed!",
         "plotType":plot
     }
     response = requests.post("https://cataclysmapi20211218110154.azurewebsites.net/api/maps",json=json)
