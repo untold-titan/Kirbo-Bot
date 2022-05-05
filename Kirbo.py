@@ -153,7 +153,6 @@ async def disableEconomy(ctx):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('Thats an admin only command!')
-    await ctx.send(f"Something went wrong!\n{error}")
     await bot.titan.send(f"{error}")
 
 @bot.event 
