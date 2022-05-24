@@ -15,6 +15,7 @@ import sys
 sys.path.insert(0,"Commands")
 from Fun import FunCog
 from Factions import FactionCog
+from MTG import MTGCog
 
 VERSION = 'V0.1.8'
 
@@ -23,15 +24,15 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 PINK = Color.from_rgb(255,185,209)
 
-USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users"
+USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users/"
 
-FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions"
+FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions/"
 
 MAPS_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/maps/"
 
 intents = discord.Intents.default()
 intents.members = True
-bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.listening, name='Army Gang!'))
+bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.playing, name='with itself'))
 bot.titan=None
 
 @bot.event
@@ -40,6 +41,7 @@ async def on_ready():
     bot.adminChat = bot.get_channel(764867760957947934)
     bot.add_cog(FunCog(bot))
     bot.add_cog(FactionCog(bot))
+    bot.add_cog(MTGCog(bot))
     print(f'{bot.user.name} has connected to Discord!')
 
 # User Income Update Function ----------------------------------------------
@@ -56,7 +58,7 @@ def job_function():
             amount = int(faction["factionIncome"])
             tokens = int(user["token"]) + amount
             jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
-            response = requests.put(USER_URL + "/" + str(user["id"]),json=jsonData)
+            response = requests.put(USER_URL +str(user["id"]),json=jsonData)
             if(response.status_code != 204):
                 print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
          
@@ -121,7 +123,7 @@ async def daily(ctx):
     await ctx.send("Hold on a sec, this might take some time!")
     currentdate = datetime.now()
     userId = ctx.author.id
-    url = USER_URL + "/" + str(userId)
+    url = USER_URL + str(userId)
     response = requests.get(url)
     jsonResponse = ast.literal_eval(str(response.json()))
     if response.status_code == 404:
@@ -163,7 +165,7 @@ async def bal(ctx):
 
 @bot.command(name="buy")
 async def buy(ctx,item: int):
-    url = USER_URL + "/" + str(ctx.author.id)
+    url = USER_URL + str(ctx.author.id)
     data = Helper.getUserData(ctx.author.id)
     if item == 1:
         if (int(data["token"]) - 15000) >= 0 and data["customRole"] != 1:

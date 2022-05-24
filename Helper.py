@@ -1,9 +1,9 @@
 import requests
 import ast
 
-USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users"
+USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users/"
 
-FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions"
+FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions/"
 
 MAPS_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/maps/"
 
@@ -16,7 +16,7 @@ def getAllUsers():
         return jsonResponse
 
 def getUserData(id):
-    url = USER_URL + "/" + str(id)
+    url = USER_URL + str(id)
     response = requests.get(url)
     if response.status_code != 200:
         return None
@@ -84,12 +84,11 @@ def updateFaction(faction):
         "factionName":faction["factionName"],
         "factionIncome":faction["factionIncome"],
         "factionMembers":faction["factionMembers"],
-        "factionLandClaim":faction["factionLandClaim"],
         "factionLogo":faction["factionLogo"],
         "attack":faction["attack"],
         "defense":faction["defense"],
         "utility":faction["utility"],
         "balance":faction["balance"]
         }
-    response = requests.put(FACTION_URL+"/"+str(faction["id"]),json=json)
+    response = requests.put(FACTION_URL+str(faction["id"]),json=json)
     return response
