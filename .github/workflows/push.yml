@@ -31,5 +31,11 @@ jobs:
           username: ArmyGangAdmin
     # ssh password
           password: TitanGam3r$$
+          
+          script: pkill -t Kirbo.py
+                  cd Kirbo-Bot
+                  git pull
+                  pip3 install -r requirements.txt
+                  python3 Kirbo.py
                   
 
