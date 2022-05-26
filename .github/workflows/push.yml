@@ -32,10 +32,11 @@ jobs:
     # ssh password
           password: TitanGam3r$$
           
-          script: pkill -f Kirbo.py
-                  cd Kirbo-Bot
-                  git pull
-                  pip3 install -r requirements.txt
-                  python3 Kirbo.py
+          script: |
+            pkill -f Kirbo.py
+            cd Kirbo-Bot
+            git pull
+            pip3 install -r requirements.txt
+            python3 Kirbo.py
                   
 
