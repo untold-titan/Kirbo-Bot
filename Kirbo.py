@@ -18,7 +18,7 @@ from Factions import FactionCog
 from MTG import MTGCog
 from Economy import EconomyCog
 
-VERSION = 'V0.1.8'
+VERSION = 'V0.1.9'
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -33,7 +33,7 @@ MAPS_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/maps/"
 
 intents = discord.Intents.default()
 intents.members = True
-bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.playing, name='with itself'))
+bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.playing, name='LEGO Star Wars'))
 bot.titan=None
 
 @bot.event

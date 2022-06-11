@@ -48,7 +48,7 @@ class FunCog(commands.Cog):
     async def about(self,ctx):
         myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Untold_Titan for the Army Gang", color=PINK)
         myEmbed.set_author(name="Untold_Titan#4644", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
-        myEmbed.add_field(name="Changes:", value="REMOVED ALL FACTIONS COMMANDS")
+        myEmbed.add_field(name="Changes:", value="Added Magic the Gathering Commands, Also fixed several bugs, and added the Gamer Tiers.")
         myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer\nLord Death_Trooper - Helping with testing and Ideas.")
         myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
         await ctx.send(embed=myEmbed)

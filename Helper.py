@@ -1,11 +1,14 @@
 import requests
 import ast
+from discord import Color
 
 USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users/"
 
 FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions/"
 
 MAPS_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/maps/"
+
+PINK = Color.from_rgb(255,185,209)
 
 def getAllUsers():
     response = requests.get(USER_URL)

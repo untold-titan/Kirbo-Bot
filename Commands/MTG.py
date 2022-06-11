@@ -20,6 +20,39 @@ class MTGCog(commands.Cog):
         winner = Helper.getUserData(ctx.author.id)
         loser = Helper.getUserData(member.id)
         if winner != None and loser != None:
+            #in the case that both users already have played against each other
+            ids = winner["playedVS"].split(",")
+            wins = winner["wins"].split(",")
+            if(winner["playedVS"] != ""):
+                for i in range(len(ids)):
+                    if(str(member.id) == ids[i]):
+                        win = int(wins[i])
+                        win += 1
+                        wins[i] = str(win)
+                        winner["wins"] = ""
+                        for win in wins:
+                            winner["wins"] += win + ","
+                        winner["wins"] = winner["wins"].rstrip(winner["wins"][-1])
+                    elif(member.id != ids[i] and i == len(ids) - 1):
+                        winner["playedVS"] += "," + str(member.id)
+                        winner["wins"] += ",1"
+                        winner["losses"] += ",0"
+            ids = loser["playedVS"].split(",")
+            losses = loser["losses"].split(",")
+            if(loser["playedVS"] != ""):
+                for i in range(len(ids)):
+                    if(str(ctx.author.id) == ids[i]):
+                        lose = int(losses[i])
+                        lose += 1
+                        losses[i] = str(lose)
+                        loser["losses"] = ""
+                        for lose in losses:
+                            loser["losses"] += lose + ","
+                        loser["losses"] = loser["losses"].rstrip(loser["losses"][-1])
+                    elif(member.id != ids[i] and i == len(ids) - 1):
+                        loser["playedVS"] += "," + str(ctx.author.id)
+                        loser["wins"] += ",0"
+                        loser["losses"] += ",1"
             #For when the winner has no values set
             if winner["playedVS"] == "":
                 winner["playedVS"] = str(member.id)
@@ -32,45 +65,30 @@ class MTGCog(commands.Cog):
                 loser["wins"] = "0"
                 loser["losses"] = "1"
                 res = requests.put(USER_URL + str(member.id),json=loser)
-            #in the case that both users already have played against each other
-            else:
-                ids = winner["playedVS"].split(",")
-                wins = winner["wins"].split(",")
-                for i in range(len(ids)):
-                    if(str(member.id) == ids[i]):
-                        win = int(wins[i])
-                        win += 1
-                        wins[i] = str(win)
-                        winner["wins"] = ""
-                        for win in wins:
-                            winner["wins"] += win + ","
-                        winner["wins"] = winner["wins"].rstrip(winner["wins"][-1])
-                    if(member.id != ids[i] and i == len(ids)):
-                        winner["playedVS"] += "," + member.id
-                        winner["wins"] += ",1"
-                        winner["losses"] += ",0"
-                ids = loser["playedVS"].split(",")
-                losses = loser["losses"].split(",")
-                for i in range(len(ids)):
-                    if(str(ctx.author.id) == ids[i]):
-                        lose = int(losses[i])
-                        lose += 1
-                        losses[i] = str(lose)
-                        loser["losses"] = ""
-                        for lose in losses:
-                            loser["losses"] += lose + ","
-                        loser["losses"] = loser["losses"].rstrip(loser["losses"][-1])
-                    if(member.id != ids[i] and i == len(ids)):
-                        loser["playedVS"] += "," + ctx.author.id
-                        loser["wins"] += ",0"
-                        loser["losses"] += ",1"
             res = requests.put(USER_URL + str(ctx.author.id),json=winner)
             res = requests.put(USER_URL + str(member.id),json=loser)
         elif(winner == None):
             await ctx.send("You need to create a Kirbo account! Use `,bal` or `,daily` to start!")
         elif(loser == None):
             await ctx.send(f"`{member.name}` needs to create a Kirbo account! Use `,bal` or `,daily` to start!")
-            
+    
+    @commands.command(name="stats")
+    async def stats(self,ctx):
+        user = Helper.getUserData(ctx.author.id)
+        players = user["playedVS"].split(",")
+        print(players)
+        wins = user["wins"].split(",")
+        losses = user["losses"].split(",")
+        embed = discord.Embed(title=f"{ctx.author.name}'s MTG stats",color=Helper.PINK)
+        i = 0
+        if players[0] == "":
+            await ctx.send("You need to play against someone first!")
+            return
+        for playerID in players:
+            player = await self.bot.fetch_user(playerID)
+            embed.add_field(name=f"Games against {player.name}",value=f"Wins:{wins[i]}|Losses:{losses[i]}")
+            i += 1
+        await ctx.send(embed=embed)
             
 
             
