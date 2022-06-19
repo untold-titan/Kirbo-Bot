@@ -141,7 +141,7 @@ class EconomyCog(commands.Cog):
                 else:
                     await ctx.send("Something went wrong")
             else:
-                await ctx.send("Somehting went wrong")
+                await ctx.send("Something went wrong")
         elif taker == None:
             await ctx.send(member +"has to earn some tokens before they can recive!")
         elif giver == None:
