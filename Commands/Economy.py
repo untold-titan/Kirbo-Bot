@@ -46,8 +46,13 @@ class EconomyCog(commands.Cog):
     @commands.command(aliases=["s","shop"])
     async def store(self,ctx):
         embed=discord.Embed(title="Army Gang Token Store",description="Use `,buy <item-number>` to purchase an item!",color=PINK)
-        embed.add_field(name="1. Custom Role",value="15000 Tokens")
-        i = 2
+        embed.add_field(name="1. Custom Role",value="50,000 tokens")
+        embed.add_field(name="2. S Tier Gamer",value="25,000 tokens")
+        embed.add_field(name="3. A Tier Gamer",value="20,000 tokens")
+        embed.add_field(name="4. B Tier Gamer",value="15,000 tokens")
+        embed.add_field(name="5. C Tier Gamer",value="10,000 tokens")
+        embed.add_field(name="6. D Tier Gamer",value="5,000 tokens")
+        i = 7
         for roleID in roleIDS:
             role = self.bot.get_guild(752023138795126856).get_role(roleID)
             embed.add_field(name=f"{i}. {role.name}",value="Price: FREE!",inline=False)
@@ -105,8 +110,8 @@ class EconomyCog(commands.Cog):
         url = USER_URL + "/" + str(ctx.author.id)
         data = Helper.getUserData(ctx.author.id)
         if item == 1:
-            if (int(data["token"]) - 15000) >= 0 and data["customRole"] != 1:
-                tokens = int(data["token"]) - 15000
+            if (int(data["token"]) - 50000) >= 0 and data["customRole"] != 1:
+                tokens = int(data["token"]) - 50000
                 jsonData = {"Id": f"{ctx.author.id}", "token":f'{tokens}', "date":f'{data["date"]}',"customRole":1}
                 response= requests.put(url,json=jsonData)
                 if response.status_code == 204:
@@ -118,8 +123,92 @@ class EconomyCog(commands.Cog):
                     await ctx.send("You already have a custom role!")
                     return
                 await ctx.send("You don't have enough tokens!")
-        elif item > 1:
-            role = self.bot.get_guild(752023138795126856).get_role(roleIDS[item - 2])
+        elif item == 2:
+            hasPreviousRole = False
+            for role in ctx.author.roles:
+                if(role.id == 794982165385052182):
+                    hasPreviousRole = True
+            if (int(data["token"]) - 25000) >= 0 and hasPreviousRole == True:
+                data["token"] = str(int(data["token"]) - 25000)
+                response= requests.put(url,json=data)
+                if response.status_code == 204:
+                    role = self.bot.get_guild(752023138795126856).get_role(794982243419422760)
+                    await ctx.author.add_roles(role)
+                    await ctx.send("You purchased S Tier Gamer! You're breathtaking!")
+                else:
+                    await ctx.send(f"There was an issue contacting the CataclysmAPI ERROR CODE = {response.status_code}")
+            elif hasPreviousRole == False:
+                await ctx.send("You must purchase A Tier Gamer first!")
+            else:
+                await ctx.send("You don't have enough tokens!")
+        elif item == 3:
+            hasPreviousRole = False
+            for role in ctx.author.roles:
+                if(role.id == 794982115589619752):
+                    hasPreviousRole = True
+            if (int(data["token"]) - 20000) >= 0 and hasPreviousRole == True:
+                data["token"] = str(int(data["token"]) - 20000)
+                response= requests.put(url,json=data)
+                if response.status_code == 204:
+                    role = self.bot.get_guild(752023138795126856).get_role(794982115589619752)
+                    await ctx.author.add_roles(role)
+                    await ctx.send("You purchased A Tier Gamer! You're Amazing!!")
+                else:
+                    await ctx.send(f"There was an issue contacting the CataclysmAPI ERROR CODE = {response.status_code}")
+            elif hasPreviousRole == False:
+                await ctx.send("You must purchase B Tier Gamer first!")
+            else:
+                await ctx.send("You don't have enough tokens!")
+        elif item == 4:
+            hasPreviousRole = False
+            for role in ctx.author.roles:
+                if(role.id == 794982059822022657):
+                    hasPreviousRole = True
+            if (int(data["token"]) - 15000) >= 0 and hasPreviousRole == True:
+                data["token"] = str(int(data["token"]) - 15000)
+                response= requests.put(url,json=data)
+                if response.status_code == 204:
+                    role = self.bot.get_guild(752023138795126856).get_role(794982059822022657)
+                    await ctx.author.add_roles(role)
+                    await ctx.send("You purchased B Tier Gamer!")
+                else:
+                    await ctx.send(f"There was an issue contacting the CataclysmAPI ERROR CODE = {response.status_code}")
+            elif hasPreviousRole == False:
+                await ctx.send("You must purchase C Tier Gamer first!")
+            else:
+                await ctx.send("You don't have enough tokens!")
+        elif item == 5:
+            hasPreviousRole = False
+            for role in ctx.author.roles:
+                if(role.id == 794981977568706610):
+                    hasPreviousRole = True
+            if (int(data["token"]) - 10000) >= 0 and hasPreviousRole == True:
+                data["token"] = str(int(data["token"]) - 10000)
+                response= requests.put(url,json=data)
+                if response.status_code == 204:
+                    role = self.bot.get_guild(752023138795126856).get_role(794982115589619752)
+                    await ctx.author.add_roles(role)
+                    await ctx.send("You purchased C Tier Gamer!")
+                else:
+                    await ctx.send(f"There was an issue contacting the CataclysmAPI ERROR CODE = {response.status_code}")
+            elif hasPreviousRole == False:
+                await ctx.send("You must purchase D Tier Gamer first!")
+            else:
+                await ctx.send("You don't have enough tokens!")
+        elif item == 6:
+            if (int(data["token"]) - 5000) >= 0:
+                data["token"] = str(int(data["token"]) - 5000)
+                response= requests.put(url,json=data)
+                if response.status_code == 204:
+                    role = self.bot.get_guild(752023138795126856).get_role(794981977568706610)
+                    await ctx.author.add_roles(role)
+                    await ctx.send("You purchased D Tier Gamer!")
+                else:
+                    await ctx.send(f"There was an issue contacting the CataclysmAPI ERROR CODE = {response.status_code}")
+            else:
+                await ctx.send("You don't have enough tokens!")
+        elif item > 6:
+            role = self.bot.get_guild(752023138795126856).get_role(roleIDS[item - 7])
             await ctx.author.add_roles(role)
             await ctx.send(f"You bought: {role.name}")
 

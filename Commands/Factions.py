@@ -164,7 +164,7 @@ class FactionCog(commands.Cog):
         for x in members:
             string += x + ","
         if string == "":
-            response = requests.delete(FACTION_URL + "/" + str(faction["id"]))
+            response = requests.delete(FACTION_URL + str(faction["id"]))
             emojis = ctx.guild.emojis
             for emoji in emojis:
                 if emoji.name == faction["factionLogo"]:

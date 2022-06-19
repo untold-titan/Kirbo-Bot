@@ -15,24 +15,25 @@ import sys
 sys.path.insert(0,"Commands")
 from Fun import FunCog
 from Factions import FactionCog
+from MTG import MTGCog
 from Economy import EconomyCog
 
-VERSION = 'V0.1.8'
+VERSION = 'V0.1.9'
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 PINK = Color.from_rgb(255,185,209)
 
-USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users"
+USER_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/users/"
 
-FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions"
+FACTION_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/factions/"
 
 MAPS_URL="https://cataclysmapi20211218110154.azurewebsites.net/api/maps/"
 
 intents = discord.Intents.default()
 intents.members = True
-bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.listening, name='Army Gang!'))
+bot = commands.Bot(command_prefix=',',intents=intents,activity=discord.Activity(type=discord.ActivityType.playing, name='LEGO Star Wars'))
 bot.titan=None
 
 @bot.event
@@ -40,7 +41,8 @@ async def on_ready():
     bot.titan = bot.get_user(847989667088564244)
     bot.adminChat = bot.get_channel(764867760957947934)
     bot.add_cog(FunCog(bot))
-    bot.add_cog(FactionCog(bot))
+    # bot.add_cog(FactionCog(bot))
+    bot.add_cog(MTGCog(bot))
     bot.add_cog(EconomyCog(bot))
     print(f'{bot.user.name} has connected to Discord!')
 
@@ -50,6 +52,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 # Start the scheduler
 sched = BackgroundScheduler()
 
+# Adds Faction Income, Currently Broken cause Factions had a rework. 
 def job_function():
     users = Helper.getAllUsers()
     for user in users:
@@ -58,16 +61,15 @@ def job_function():
             amount = int(faction["factionIncome"])
             tokens = int(user["token"]) + amount
             jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
-            response = requests.put(USER_URL + "/" + str(user["id"]),json=jsonData)
+            response = requests.put(USER_URL +str(user["id"]),json=jsonData)
             if(response.status_code != 204):
                 print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
          
 
-# Schedules job_function to be run once each hour
-minutes = 1
-hours = 1
-sched.add_job(job_function, 'interval', hours=hours)
-sched.start()
+# Schedules job_function to be run once each day
+# hours = 24
+# sched.add_job(job_function, 'interval', hours=hours)
+# sched.start()
 
 #Help Command --------------------------------------------------------------
 bot.remove_command('help')
@@ -77,7 +79,7 @@ async def help(ctx):
     embed.add_field(name="Fun Commands", value="about, poyo, roll, slap, shoot, finish",inline=False)
     embed.add_field(name="Economy Commands",value="balance, daily, store, buy, give",inline=False)
     embed.add_field(name="Faction Commands",value="All Factions commands are currently disabled!",inline=False)
-    embed.add_field(name="Debugging Commands",value="testapi, shutdown",inline=False)
+    embed.add_field(name="MTG Commands",value="won, stats",inline=False)
     #faction, createfaction, leavefaction, invite, deposit, factionstore
     await ctx.send(embed=embed)
 
