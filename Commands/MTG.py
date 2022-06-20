@@ -77,7 +77,7 @@ class MTGCog(commands.Cog):
                         res = requests.put(USER_URL + str(member.id),json=loser)
                     res = requests.put(USER_URL + str(ctx.author.id),json=winner)
                     res = requests.put(USER_URL + str(member.id),json=loser)
-                    ctx.send("Updated Stats!")
+                    await ctx.send("Updated Stats!")
                 elif(winner == None):
                     await ctx.send("You need to create a Kirbo account! Use `,bal` or `,daily` to start!")
                 elif(loser == None):
