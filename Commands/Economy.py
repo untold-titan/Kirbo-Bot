@@ -38,6 +38,11 @@ roleIDS=[
     987535775455395880
 ]
 
+S_TIER = 794982243419422760
+A_TIER = 794982165385052182
+B_TIER = 794982115589619752
+C_TIER = 794982059822022657
+D_TIER = 794981977568706610
 class EconomyCog(commands.Cog):
     def __init__(self,bot):
         self.bot = bot
@@ -105,13 +110,6 @@ class EconomyCog(commands.Cog):
             tokenAmt = jsonResponse["token"]
         embed = discord.Embed(title=f"{ctx.author}'s Token Balance", description=f"{tokenAmt} AG tokens",color=PINK)
         await ctx.send(embed=embed)
-
-
-    S_TIER = 794982243419422760
-    A_TIER = 794982165385052182
-    B_TIER = 794982115589619752
-    C_TIER = 794982059822022657
-    D_TIER = 794981977568706610
 
     @commands.command(name="buy")
     async def buy(self,ctx,item: int):
