@@ -106,6 +106,13 @@ class EconomyCog(commands.Cog):
         embed = discord.Embed(title=f"{ctx.author}'s Token Balance", description=f"{tokenAmt} AG tokens",color=PINK)
         await ctx.send(embed=embed)
 
+
+    S_TIER = 794982243419422760
+    A_TIER = 794982165385052182
+    B_TIER = 794982115589619752
+    C_TIER = 794982059822022657
+    D_TIER = 794981977568706610
+
     @commands.command(name="buy")
     async def buy(self,ctx,item: int):
         url = USER_URL + "/" + str(ctx.author.id)
@@ -127,13 +134,13 @@ class EconomyCog(commands.Cog):
         elif item == 2:
             hasPreviousRole = False
             for role in ctx.author.roles:
-                if(role.id == 794982165385052182):
+                if(role.id == A_TIER):
                     hasPreviousRole = True
             if (int(data["token"]) - 25000) >= 0 and hasPreviousRole == True:
                 data["token"] = str(int(data["token"]) - 25000)
                 response= requests.put(url,json=data)
                 if response.status_code == 204:
-                    role = self.bot.get_guild(752023138795126856).get_role(794982243419422760)
+                    role = self.bot.get_guild(752023138795126856).get_role(S_TIER)
                     await ctx.author.add_roles(role)
                     await ctx.send("You purchased S Tier Gamer! You're breathtaking!")
                 else:
@@ -145,13 +152,13 @@ class EconomyCog(commands.Cog):
         elif item == 3:
             hasPreviousRole = False
             for role in ctx.author.roles:
-                if(role.id == 794982115589619752):
+                if(role.id == B_TIER):
                     hasPreviousRole = True
             if (int(data["token"]) - 20000) >= 0 and hasPreviousRole == True:
                 data["token"] = str(int(data["token"]) - 20000)
                 response= requests.put(url,json=data)
                 if response.status_code == 204:
-                    role = self.bot.get_guild(752023138795126856).get_role(794982115589619752)
+                    role = self.bot.get_guild(752023138795126856).get_role(A_TIER)
                     await ctx.author.add_roles(role)
                     await ctx.send("You purchased A Tier Gamer! You're Amazing!!")
                 else:
@@ -163,13 +170,13 @@ class EconomyCog(commands.Cog):
         elif item == 4:
             hasPreviousRole = False
             for role in ctx.author.roles:
-                if(role.id == 794982059822022657):
+                if(role.id == C_TIER):
                     hasPreviousRole = True
             if (int(data["token"]) - 15000) >= 0 and hasPreviousRole == True:
                 data["token"] = str(int(data["token"]) - 15000)
                 response= requests.put(url,json=data)
                 if response.status_code == 204:
-                    role = self.bot.get_guild(752023138795126856).get_role(794982059822022657)
+                    role = self.bot.get_guild(752023138795126856).get_role(B_TIER)
                     await ctx.author.add_roles(role)
                     await ctx.send("You purchased B Tier Gamer!")
                 else:
@@ -181,7 +188,7 @@ class EconomyCog(commands.Cog):
         elif item == 5:
             hasPreviousRole = False
             for role in ctx.author.roles:
-                if(role.id == 794981977568706610):
+                if(role.id == D_TIER):
                     hasPreviousRole = True
             if (int(data["token"]) - 10000) >= 0 and hasPreviousRole == True:
                 data["token"] = str(int(data["token"]) - 10000)
