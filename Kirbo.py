@@ -1,5 +1,7 @@
 # bot.py
 
+# TODO: Replace ALL HTTPS requests with Firebase.
+
 import os
 import ast
 from discord.ext.commands.converter import MemberConverter
@@ -8,8 +10,11 @@ import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord import Color
+from Datatypes import User
+import traceback
+import datetime
 
-
+from Helper import db, getUserData
 import Helper
 import sys
 sys.path.insert(0,"Commands")
@@ -17,6 +22,7 @@ from Fun import FunCog
 from Factions import FactionCog
 from MTG import MTGCog
 from Economy import EconomyCog
+
 
 VERSION = 'V0.1.9'
 
@@ -53,17 +59,17 @@ from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler()
 
 # Adds Faction Income, Currently Broken cause Factions had a rework. 
-def job_function():
-    users = Helper.getAllUsers()
-    for user in users:
-        faction = Helper.getUserFaction(user["id"])
-        if faction != None:
-            amount = int(faction["factionIncome"])
-            tokens = int(user["token"]) + amount
-            jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
-            response = requests.put(USER_URL +str(user["id"]),json=jsonData)
-            if(response.status_code != 204):
-                print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
+# def job_function():
+#     users = Helper.getAllUsers()
+#     for user in users:
+#         faction = Helper.getUserFaction(user["id"])
+#         if faction != None:
+#             amount = int(faction["factionIncome"])
+#             tokens = int(user["token"]) + amount
+#             jsonData = {"id": user["id"], "token": tokens, "date": f"{user['date']}"}
+#             response = requests.put(USER_URL +str(user["id"]),json=jsonData)
+#             if(response.status_code != 204):
+#                 print(f"Something went wrong with adding Tokens to user's balance. Heres the error code: {response.status_code}")
          
 
 # Schedules job_function to be run once each day
@@ -71,7 +77,18 @@ def job_function():
 # sched.add_job(job_function, 'interval', hours=hours)
 # sched.start()
 
-#Help Command --------------------------------------------------------------
+# About Bot Command --------------------------------------------------------------
+@commands.command(name='about')
+async def about(self,ctx):
+    myEmbed=discord.Embed(title=f"Kirbo Bot {VERSION}",url="https://github.com/cataclysm-interactive/Kirbo-Bot",description="This bot was developed by Untold_Titan for the Army Gang", color=PINK)
+    myEmbed.set_author(name="Untold_Titan#4644", icon_url="https://icy-mushroom-088e1a210.azurestaticapps.net/pfp.png")
+    myEmbed.add_field(name="Changes:", value="All the backend of this bot, and Army Gang's website was redone, everything should be faster now!")
+    myEmbed.add_field(name="Acknowledgements:", value="Titan - Lead Developer\nLord Death_Trooper - Helping with testing and Ideas.")
+    myEmbed.set_footer(text="This bot's code is on Github! Tap the embed to go there!")
+    await ctx.send(embed=myEmbed)
+
+
+# Help Command --------------------------------------------------------------
 bot.remove_command('help')
 @bot.command("help")
 async def help(ctx):
@@ -82,7 +99,6 @@ async def help(ctx):
     embed.add_field(name="MTG Commands",value="won, stats",inline=False)
     #faction, createfaction, leavefaction, invite, deposit, factionstore
     await ctx.send(embed=embed)
-
 
 # Moderation Commands ------------------------------------------------------------
 @bot.command(name="mute")
@@ -104,10 +120,28 @@ async def unmute(ctx,member:MemberConverter):
 @bot.command(name="testapi")
 @commands.has_role("admin")
 async def testapi(ctx):
-    responseuser = requests.get(USER_URL)
-    responsestore = requests.get(FACTION_URL)
-    await bot.titan.send(responseuser.json())
-    await bot.titan.send(responsestore.json())
+    user = Helper.getUserData(u"temp-user")
+    if user == None:
+        user = User("temp-user","TemplateUser#6466")
+        print(Helper.updateUser(user))
+        return
+    user.tokens = 50
+    Helper.updateUser(user)
+    await bot.titan.send("Check Firebase, Supposedly updated it. ")
+    
+    titan = User(ctx.author.id,ctx.author.name)
+    Helper.updateUser(titan)
+    titan2 = getUserData(str(ctx.author.id))
+    titan2.tokens = 100
+    Helper.updateUser(titan2)
+
+    # docs = db.collection(u'users').stream()
+    # user = Helper.getUserData("template-user")
+    # await bot.titan.send(user.to_string())
+    # # Will need to add other collections to this once they're created
+    # for doc in docs:
+    #     await ctx.send(f"{doc.id} => {doc.to_dict()}")
+    
 
 @bot.command(name="shutdown")
 @commands.has_role("admin")
@@ -151,11 +185,13 @@ async def disableEconomy(ctx):
 
 #Events ---------------------------------------------------------------------
 
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.errors.CheckFailure):
-        await ctx.send('Thats an admin only command!')
-    await bot.titan.send(f"{error}")
+# @bot.event
+# async def on_command_error(event, *args, **kwargs):
+#     embed = discord.Embed(title=':x: Event Error', colour=0xe74c3c) #Red
+#     embed.add_field(name='Event', value=event)
+#     embed.description = '```py\n%s\n```' % traceback.format_exc()
+#     embed.timestamp = datetime.datetime.utcnow()
+#     await bot.titan.send(embed=embed)
 
 @bot.event 
 async def on_member_remove(member):
