@@ -24,9 +24,10 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 	try {
 		console.log("Deleting old guild commands")
 		const init = await rest.put(
-			Routes.applicationGuildCommands(process.env.APP_ID, process.env.LAB_ID),
+			Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID),
 			{ body: [] },
 		);
+		console.log("Deleted old guild commands")
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
 		// The put method is used to fully refresh all commands in the guild with the current set
