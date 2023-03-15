@@ -9,7 +9,11 @@ module.exports = {
 	async execute(interaction) {
         const roleSelect = new ActionRowBuilder()
         .addComponents(
-            new StringSelectMenuBuilder().setCustomId("role_select").setPlaceholder("Pick a role!")
+            new StringSelectMenuBuilder()
+            .setCustomId("role_select")
+            .setPlaceholder("Pick a role!")
+            .setMinValues(1)
+            .setMaxValues(100)
             .addOptions(roles)
         )
 		await interaction.reply({content:"Please pick a role!", components:[roleSelect]});

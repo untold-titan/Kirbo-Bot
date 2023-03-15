@@ -30,7 +30,9 @@ client.on("interactionCreate", async interaction =>{
 	if (!interaction.isStringSelectMenu()) return;
 	if(interaction.customId == "role_select"){
 		await interaction.update({content:"Gave you the role!",components:[]})
-		interaction.member.roles.add(interaction.values[0]);
+		interaction.values.forEach(value => {
+			interaction.member.roles.add(value);
+		})
 	}
 })
 
