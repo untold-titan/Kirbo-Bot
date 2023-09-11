@@ -1,0 +1,14 @@
+{
+    "commands":[
+        {
+            "name":"about",
+            "type":1,
+            "description":"info about the terminal"
+        },
+        {
+            "name":"join_gamers",
+            "type":1,
+            "description":"Get gaming wing security clearance"
+        }
+    ]
+}

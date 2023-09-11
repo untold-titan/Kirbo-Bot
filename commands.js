@@ -1,44 +1,23 @@
-//Must be run before testing
-const { REST, Routes } = require('discord.js');
-const fs = require('node:fs');
-const path = require('node:path');
-require("dotenv").config(); // Setup process.env
+import { apiUrl } from "./data/vars"
 
+// Registers commands in the discord API.
+const commandFile = Bun.file("data/commands.json")
 
-const commands = [];
-// Grab all the command files from the commands directory you created earlier
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+const commandData = await JSON.parse(await commandFile.text())
 
-// Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
-for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	commands.push(command.data.toJSON());
-}
+let uploadedCommands = []
 
-// Construct and prepare an instance of the REST module
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-
-// and deploy your commands!
-(async () => {
-	try {
-		console.log("Deleting old guild commands")
-		const init = await rest.put(
-			Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID),
-			{ body: [] },
-		);
-		console.log("Deleted old guild commands")
-		console.log(`Started refreshing ${commands.length} application (/) commands.`);
-
-		// The put method is used to fully refresh all commands in the guild with the current set
-		const data = await rest.put(
-			Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID),
-			{ body: commands },
-		);
-
-		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-	} catch (error) {
-		// And of course, make sure you catch and log any errors!
-		console.error(error);
-	}
-})();
+commandData["commands"].forEach(async command => {
+    console.log(command)
+    let url = apiUrl + "applications/" + Bun.env.APP_ID + "/guilds/" + Bun.env.GUILD_ID + "/commands"
+    console.log(url)
+    let res = await fetch(url,{
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bot " + Bun.env.TOKEN
+        },
+        body:JSON.stringify(command)
+    })
+    console.log(res.status)
+})
