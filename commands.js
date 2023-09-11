@@ -5,8 +5,6 @@ const commandFile = Bun.file("data/commands.json")
 
 const commandData = await JSON.parse(await commandFile.text())
 
-let uploadedCommands = []
-
 commandData["commands"].forEach(async command => {
     console.log(command)
     let url = apiUrl + "applications/" + Bun.env.APP_ID + "/guilds/" + Bun.env.GUILD_ID + "/commands"

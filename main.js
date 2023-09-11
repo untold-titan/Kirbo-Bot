@@ -12,7 +12,6 @@ if(res.status != 200)
 	throw new Error("Couldn't Authenticate")
 // Add params to URL
 let data = await res.json()
-console.log(data)
 let gatewayURL = data["url"] + "?v=10&encoding=json"
 
 // Actually connect
@@ -42,15 +41,14 @@ socket.addEventListener("message", event => {
 			return;
 		}
 		if(data["t"] == "MESSAGE_CREATE"){
-			// console.log("Message sent by: " + data["d"]["author"]["username"])
+			console.log("Message sent by: " + data["d"]["author"]["username"])
 			return;
 		}
 		if(data["t"] == "INTERACTION_CREATE"){
-			console.log(data)
 			handleEvent(data["d"])
 			return;
 		}
-		console.log(data)
+		console.log("New Event Received: " + data["t"])
 	}
 	// Hello event
 	if(data["op"] == 10){
@@ -61,12 +59,8 @@ socket.addEventListener("message", event => {
 	}
 	// Heartbeat Received
 	if(data["op"] == 11){
-		console.log("hb works")
 		return;
 	}
-
-	//TODO: Write a handler for each opcode i want to handle. Probably do that in a seperate file.
-	// Also could probably extract this connection logic into its own file.
 })
 
 socket.addEventListener("close", event =>{
@@ -87,7 +81,7 @@ function identify(){
 		"op":2,
 		"d":{
 			"token":Bun.env.TOKEN,
-			"intents":512,
+			"intents":1536,
 			"properties":{
 				"os":"windows",
 				"browser":"custom",

@@ -3,12 +3,17 @@
         {
             "name":"about",
             "type":1,
-            "description":"info about the terminal"
+            "description":"Info about the terminal"
         },
         {
             "name":"join_gamers",
             "type":1,
             "description":"Get gaming wing security clearance"
+        },
+        {
+            "name":"join_city_group",
+            "type":1,
+            "description":"Join IRL city groups to stay up to date with events"
         }
     ]
 }
